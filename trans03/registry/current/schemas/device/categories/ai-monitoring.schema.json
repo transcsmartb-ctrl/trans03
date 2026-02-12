@@ -1,0 +1,374 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "CIC SSSS Device APIs - AI Monitoring Device",
+    "description": "APIs for adding/updating/querying ai-monitoring-device (e.g., AI cameras). From CIC SSSS API Framework v0.16 (Device-001/002/004). See Appendix B.[file:1]",
+    "version": "1.0.0",
+    "contact": {
+      "name": "CIC SSSS"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.example.com/v1"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Devices",
+      "description": "IoT Device Management for 4S categories.[file:1]"
+    }
+  ],
+  "paths": {
+    "/devices": {
+      "post": {
+        "tags": ["Devices"],
+        "summary": "Device-001 Add 4S IoT device data (CMP-hosted)",
+        "description": "Add new ai-monitoring-device record.[file:1]",
+        "operationId": "addAiMonitoringDevice",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AiMonitoringDevice"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          }
+        }
+      },
+      "patch": {
+        "tags": ["Devices"],
+        "summary": "Device-002 Update 4S IoT device data",
+        "description": "Partial update for ai-monitoring-device by deviceSn in body.[file:1]",
+        "operationId": "updateAiMonitoringDevice",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AiMonitoringDeviceUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/Success"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Devices"],
+        "summary": "Device-003 Delete 4S IoT device data",
+        "description": "Delete by deviceSn and siteId in body.[file:1]",
+        "operationId": "deleteAiMonitoringDevice",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceDeleteRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/Success"
+          }
+        }
+      },
+      "get": {
+        "tags": ["Devices"],
+        "summary": "Device-004 Query 4S IoT devices (Solution Vendor-hosted)",
+        "description": "List ai-monitoring-device records with pagination.[file:1]",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/siteId"
+          },
+          {
+            "$ref": "#/components/parameters/pageNum"
+          },
+          {
+            "$ref": "#/components/parameters/pageSize"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "AiMonitoringDevice": {
+        "type": "object",
+        "required": ["category4S", "siteId", "supplierId", "pushAt", "deviceProperties"],
+        "properties": {
+          "category4S": {
+            "type": "string",
+            "enum": ["ai-monitoring"],
+            "example": "ai-monitoring",
+            "description": "Fixed 4S category.[file:1]"
+          },
+          "siteId": {
+            "type": "string",
+            "example": "1693279120646",
+            "description": "Vendor-defined site key.[file:1]"
+          },
+          "cicSiteId": {
+            "type": "integer",
+            "example": 100001,
+            "description": "CIC-standard site ID (optional).[file:1]"
+          },
+          "supplierId": {
+            "type": "string",
+            "example": "438",
+            "description": "Device supplier ID.[file:1]"
+          },
+          "pushAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-01-06T14:40:16+08:00",
+            "description": "ISO 8601 push timestamp.[file:1]"
+          },
+          "deviceProperties": {
+            "type": "object",
+            "required": ["deviceSn", "deviceName", "deviceType", "ipAddress", "port", "streamUrl"],
+            "properties": {
+              "deviceSn": {
+                "type": "string",
+                "example": "AI-CAM-001"
+              },
+              "deviceName": {
+                "type": "string",
+                "example": "ai-camera-gate-1"
+              },
+              "deviceType": {
+                "type": "string",
+                "enum": ["camera", "sensor", "edge-processor"],
+                "example": "camera"
+              },
+              "ipAddress": {
+                "type": "string",
+                "format": "ipv4",
+                "example": "192.168.1.100"
+              },
+              "port": {
+                "type": "integer",
+                "example": 8080
+              },
+              "streamUrl": {
+                "type": "string",
+                "example": "rtsp://192.168.1.100:554/stream1"
+              },
+              "resolution": {
+                "type": "string",
+                "example": "1920x1080"
+              },
+              "fov": {
+                "type": "number",
+                "example": 85.5,
+                "description": "Field of view in degrees"
+              }
+            }
+          },
+          "remark": {
+            "type": "string",
+            "example": "AI camera monitoring entrance zone"
+          }
+        },
+        "description": "Full ai-monitoring-device record (AI cameras for behavior/PPE detection).[file:1]"
+      },
+      "AiMonitoringDeviceUpdate": {
+        "type": "object",
+        "required": ["deviceSn"],
+        "properties": {
+          "deviceSn": {
+            "type": "string",
+            "example": "AI-CAM-001",
+            "description": "Device serial number to update.[file:1]"
+          },
+          "deviceProperties": {
+            "$ref": "#/components/schemas/AiMonitoringDevice/properties/deviceProperties"
+          },
+          "remark": {
+            "type": "string"
+          }
+        },
+        "description": "Update request with deviceSn.[file:1]"
+      },
+      "DeviceDeleteRequest": {
+        "type": "object",
+        "required": ["deviceSn", "siteId"],
+        "properties": {
+          "deviceSn": {
+            "type": "string",
+            "example": "AI-CAM-001"
+          },
+          "siteId": {
+            "type": "string",
+            "example": "1693279120646"
+          }
+        },
+        "description": "Delete request by deviceSn and siteId.[file:1]"
+      },
+      "ApiResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "example": 10000
+          },
+          "msg": {
+            "type": "string",
+            "example": "success"
+          },
+          "data": {
+            "$ref": "#/components/schemas/AiMonitoringDevice"
+          }
+        }
+      },
+      "DeviceListResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "example": 10000
+          },
+          "msg": {
+            "type": "string",
+            "example": "success"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "list": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/AiMonitoringDevice"
+                }
+              },
+              "totalCount": {
+                "type": "integer",
+                "example": 100
+              },
+              "pageSize": {
+                "type": "integer",
+                "example": 10
+              },
+              "pageNum": {
+                "type": "integer",
+                "example": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    "parameters": {
+      "siteId": {
+        "name": "siteId",
+        "in": "query",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      "pageNum": {
+        "name": "pageNum",
+        "in": "query",
+        "schema": {
+          "type": "integer",
+          "default": 1
+        }
+      },
+      "pageSize": {
+        "name": "pageSize",
+        "in": "query",
+        "schema": {
+          "type": "integer",
+          "default": 10,
+          "maximum": 200
+        }
+      }
+    },
+    "responses": {
+      "Success": {
+        "description": "Success",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "example": 10000
+                },
+                "msg": {
+                  "type": "string",
+                  "example": "success"
+                }
+              }
+            }
+          }
+        }
+      },
+      "BadRequest": {
+        "description": "Bad Request",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "example": 10002
+                },
+                "msg": {
+                  "type": "string",
+                  "example": "missing parameters: siteId"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,346 @@
+
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "CIC SSSS Software Base APIs",
+    "description": "Unified Software Management APIs for all 4S software categories (Software-001/002/003/004). Supports category-specific schemas via discriminator. From CIC SSSS API Framework v0.16.[file:1]",
+    "version": "1.0.0",
+    "contact": {
+      "name": "CIC SSSS"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.example.com/v1"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Software",
+      "description": "Software CRUD operations (Add/Update/Delete/Query) for all 4S categories.[file:1]"
+    }
+  ],
+  "paths": {
+    "/software": {
+      "post": {
+        "tags": ["Software"],
+        "summary": "Software-001 Add software related data (CMP-hosted)",
+        "description": "Register new 4S software record. Uses category4S discriminator.[file:1]",
+        "operationId": "addSoftware",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SoftwareBase"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          }
+        }
+      },
+      "patch": {
+        "tags": ["Software"],
+        "summary": "Software-002 Update software related data",
+        "description": "Partial update by software-specific ID (epermitId, trackingId, etc.).[file:1]",
+        "operationId": "updateSoftware",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SoftwareUpdateBase"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/Success"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Software"],
+        "summary": "Software-003 Delete software related data",
+        "description": "Delete by software ID and siteId.[file:1]",
+        "operationId": "deleteSoftware",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SoftwareDeleteRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/Success"
+          }
+        }
+      },
+      "get": {
+        "tags": ["Software"],
+        "summary": "Software-004 Query software related data (Solution Vendor-hosted)",
+        "description": "Paginated list filtered by category4S, siteId, supplierId.[file:1]",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/category4S"
+          },
+          {
+            "$ref": "#/components/parameters/siteId"
+          },
+          {
+            "$ref": "#/components/parameters/supplierId"
+          },
+          {
+            "$ref": "#/components/parameters/pageNum"
+          },
+          {
+            "$ref": "#/components/parameters/pageSize"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SoftwareListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "SoftwareBase": {
+        "description": "Polymorphic base schema for all 4S software categories. Discriminator: category4S.[file:1]",
+        "discriminator": {
+          "propertyName": "category4S",
+          "mapping": {
+            "e-permit": "#/components/schemas/Epermit",
+            "digitalised-tracking-system": "#/components/schemas/DigitalisedTrackingSystem",
+            "vr-training": "#/components/schemas/VRTraining",
+            "others": "#/components/schemas/SoftwareOthers"
+          }
+        },
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/Epermit"
+          },
+          {
+            "$ref": "#/components/schemas/DigitalisedTrackingSystem"
+          },
+          {
+            "$ref": "#/components/schemas/VRTraining"
+          },
+          {
+            "$ref": "#/components/schemas/SoftwareOthers"
+          }
+        ]
+      },
+      "SoftwareUpdateBase": {
+        "description": "Base update schema - polymorphic by category4S, requires category-specific ID.[file:1]",
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/EpermitUpdate"
+          },
+          {
+            "$ref": "#/components/schemas/DigitalisedTrackingUpdate"
+          },
+          {
+            "$ref": "#/components/schemas/VRTrainingUpdate"
+          },
+          {
+            "$ref": "#/components/schemas/SoftwareOthersUpdate"
+          }
+        ]
+      },
+      "SoftwareDeleteRequest": {
+        "type": "object",
+        "required": ["id", "siteId"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Category-specific ID (epermitId, trackingId, trainingId, softwareId).[file:1]"
+          },
+          "siteId": {
+            "type": "string",
+            "example": "1693279120646"
+          },
+          "category4S": {
+            "type": "string",
+            "description": "Category discriminator (optional).[file:1]"
+          }
+        },
+        "description": "Universal software delete request.[file:1]"
+      },
+      "ApiResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "example": 10000
+          },
+          "msg": {
+            "type": "string",
+            "example": "success"
+          },
+          "data": {
+            "$ref": "#/components/schemas/SoftwareBase"
+          }
+        }
+      },
+      "SoftwareListResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "example": 10000
+          },
+          "msg": {
+            "type": "string",
+            "example": "success"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "list": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/SoftwareBase"
+                }
+              },
+              "totalCount": {
+                "type": "integer",
+                "example": 100
+              },
+              "pageSize": {
+                "type": "integer",
+                "example": 10
+              },
+              "pageNum": {
+                "type": "integer",
+                "example": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    "parameters": {
+      "category4S": {
+        "name": "category4S",
+        "in": "query",
+        "schema": {
+          "type": "string",
+          "enum": ["e-permit", "digitalised-tracking-system", "vr-training", "others"]
+        }
+      },
+      "siteId": {
+        "name": "siteId",
+        "in": "query",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      "supplierId": {
+        "name": "supplierId",
+        "in": "query",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "pageNum": {
+        "name": "pageNum",
+        "in": "query",
+        "schema": {
+          "type": "integer",
+          "default": 1
+        }
+      },
+      "pageSize": {
+        "name": "pageSize",
+        "in": "query",
+        "schema": {
+          "type": "integer",
+          "default": 10,
+          "maximum": 200
+        }
+      }
+    },
+    "responses": {
+      "Success": {
+        "description": "Success",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "example": 10000
+                },
+                "msg": {
+                  "type": "string",
+                  "example": "success"
+                }
+              }
+            }
+          }
+        }
+      },
+      "BadRequest": {
+        "description": "Bad Request",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "example": 10002
+                },
+                "msg": {
+                  "type": "string",
+                  "example": "missing parameters: siteId"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

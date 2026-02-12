@@ -1,0 +1,7 @@
+{
+  "version": "v1",
+  "devices": { "$ref": "./schemas/devices/base.json" },
+  "software": { "$ref": "./schemas/software/base.json" },
+  "measurements": { "$ref": "./schemas/measurements/base.json" },
+  "alerts": { "$ref": "./schemas/alerts/base.json" }
+}

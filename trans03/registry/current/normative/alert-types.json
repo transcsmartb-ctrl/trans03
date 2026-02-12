@@ -1,0 +1,293 @@
+openapi: 3.0.3
+info:
+  title: Alert Types Registry API
+  description: Complete registry of all alertType codes grouped by category4S for construction safety monitoring systems.
+  version: 1.0.0
+
+components:
+  schemas:
+    # Base Alert Type Schema
+    AlertType:
+      type: object
+      required:
+        - alertTypeCode
+        - alertTypeName
+      properties:
+        alertTypeCode:
+          type: string
+          description: Machine-readable unique identifier for the alert type.
+        alertTypeName:
+          type: string
+          description: Human-readable name displayed to users.
+        required:
+          type: boolean
+          description: Indicates if this alert type is mandatory for the category.
+          default: false
+
+    # Registry Response
+    AlertTypesRegistry:
+      type: object
+      required:
+        - version
+        - title
+        - description
+        - categories
+      properties:
+        version:
+          type: string
+          example: v1
+        title:
+          type: string
+          example: Alert Types
+        description:
+          type: string
+          example: Registry of all alertType codes grouped by category4S. Used for Swagger/OpenAPI enum documentation.
+        categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/AlertCategory'
+
+    # Category Schema
+    AlertCategory:
+      type: object
+      required:
+        - category4S
+        - alertTypes
+      properties:
+        category4S:
+          type: string
+          enum:
+            - smart-monitoring-device
+            - tower-crane
+            - mobile-plant-operation
+            - ai-monitoring
+            - confined-space
+            - lock-key
+            - scaffold-coupler
+            - mewp
+            - e-permit
+            - digitalised-tracking-system
+            - others
+          description: Unique 4S category identifier.
+        alertTypes:
+          type: array
+          items:
+            $ref: '#/components/schemas/AlertType'
+
+    # Category-specific Enums for Request Bodies
+    SmartMonitoringDeviceAlertType:
+      type: string
+      enum:
+        - abnormal-blood-pressure
+        - abnormal-body-temperature
+        - fall-detection
+        - standstill-idling-detection
+        - abnormal-heartbeat
+        - worker-missing
+        - low-battery
+        - restricted-area-intrusion
+        - crowd-density-too-high
+        - sos
+        - others
+      description: Smart monitoring device alert types.
+
+    TowerCraneAlertType:
+      type: string
+      enum:
+        - people-in-lifting-range
+        - insufficient-time-lifting-preparation
+        - insufficient-lifting-preparation-height
+        - lifting-height-exceeds-limit
+        - others
+      description: Tower crane alert types.
+
+    MobilePlantOperationAlertType:
+      type: string
+      enum:
+        - too-close-distance
+        - directly-front-approach
+        - directly-behind-approach
+        - directly-right-approach
+        - directly-left-approach
+        - upper-right-approach
+        - lower-right-approach
+        - upper-left-approach
+        - lower-left-approach
+        - others
+      description: Mobile plant operation alert types.
+
+    AIMonitoringAlertType:
+      type: string
+      enum:
+        - fatigued-driving
+        - no-driver
+        - receiving-phone-calls
+        - smoking-behaviour
+        - distracted-driving
+        - not-wearing-safety-helmet
+        - not-wearing-reflective-vest
+        - open-flame
+        - open-smoke
+        - restricted-area
+        - mechanical-approach
+        - edge-dangerous-area
+        - lifting-area
+        - machinery-speeding
+        - not-wearing-safety-belt
+        - others
+      description: AI monitoring alert types.
+
+    ConfinedSpaceAlertType:
+      type: string
+      enum:
+        - humidity-alert
+        - temperature-alert
+        - co-alert
+        - co2-alert
+        - o2-alert
+        - hcho-alert
+        - tvoc-alert
+        - pm25-alert
+        - pm10-alert
+        - h2c-alert
+        - ch4-alert
+        - windSpeed
+        - lel
+        - illuminance
+        - others
+      description: Confined space environmental alert types.
+
+    LockKeyAlertType:
+      type: string
+      enum:
+        - low-battery
+        - unlock-for-long-time
+        - lock-damaged
+        - unlock-fail
+        - shell-damage
+        - open-main-unit
+        - motor-abnormality
+        - others
+      description: Electronic lock/key system alert types.
+
+    ScaffoldCouplerAlertType:
+      type: string
+      enum:
+        - displacement
+        - fall
+        - low-battery
+        - others
+      description: Scaffold coupler alert types.
+
+    MEWPAlertType:
+      type: string
+      enum:
+        - low-battery
+        - obstacles
+        - stop-at-top
+        - others
+      description: Mobile Elevating Work Platform (MEWP) alert types.
+
+    EPermitAlertType:
+      type: string
+      enum:
+        - expiration
+      description: Electronic permit alert types.
+
+    DigitalisedTrackingSystemAlertType:
+      type: string
+      enum:
+        - failure-inspect-on-time
+        - check-reminders
+        - certificate-expiration
+        - others
+      description: Digitalised tracking system alert types.
+
+    OthersAlertType:
+      type: string
+      enum:
+        - others
+      description: Catch-all category.
+
+paths:
+  /alert-types:
+    get:
+      summary: Get complete alert types registry
+      tags:
+        - Alert Types
+      responses:
+        '200':
+          description: Complete registry of all alert types by category
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertTypesRegistry'
+
+  /alert-types/{category4S}:
+    get:
+      summary: Get alert types for specific category
+      tags:
+        - Alert Types
+      parameters:
+        - name: category4S
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/AlertCategory/properties/category4S'
+      responses:
+        '200':
+          description: Alert types for the specified category
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertCategory'
+
+  /alert-types/smart-monitoring-device:
+    post:
+      summary: Report smart monitoring device alert
+      tags:
+        - Smart Monitoring Device
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - alertTypeCode
+              properties:
+                alertTypeCode:
+                  $ref: '#/components/schemas/SmartMonitoringDeviceAlertType'
+                severity:
+                  type: string
+                  enum: [low, medium, high, critical]
+      responses:
+        '201':
+          description: Alert reported successfully
+
+  /alert-types/tower-crane:
+    post:
+      summary: Report tower crane alert
+      tags:
+        - Tower Crane
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - alertTypeCode
+              properties:
+                alertTypeCode:
+                  $ref: '#/components/schemas/TowerCraneAlertType'
+
+tags:
+  - name: Alert Types
+    description: Registry and reporting endpoints for all alert categories
+  - name: Smart Monitoring Device
+    description: Wearable/device-based health & safety alerts
+  - name: Tower Crane
+    description: Tower crane operation safety alerts
+  - name: Mobile Plant Operation
+    description: Proximity & collision warnings for mobile equipment
