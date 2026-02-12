@@ -1,0 +1,403 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "CIC SSSS Software APIs - E-Permit",
+    "description": "APIs for adding/updating/querying e-permit software data (Hot Work, Working at Height, etc.). From CIC SSSS API Framework v0.16 (Software-001/002/004). See Appendix C.[file:1]",
+    "version": "1.0.0",
+    "contact": {
+      "name": "CIC SSSS"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.example.com/v1"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Software",
+      "description": "Software data management (e-permits, tracking systems, VR training).[file:1]"
+    }
+  ],
+  "paths": {
+    "/software": {
+      "post": {
+        "tags": ["Software"],
+        "summary": "Software-001 Add software related data (CMP-hosted)",
+        "description": "Add new e-permit record.[file:1]",
+        "operationId": "addEpermit",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Epermit"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          }
+        }
+      },
+      "patch": {
+        "tags": ["Software"],
+        "summary": "Software-002 Update software related data",
+        "description": "Partial update for e-permit.[file:1]",
+        "operationId": "updateEpermit",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EpermitUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/Success"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Software"],
+        "summary": "Software-003 Delete software related data",
+        "description": "Delete by epermitId and siteId.[file:1]",
+        "operationId": "deleteEpermit",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SoftwareDeleteRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/Success"
+          }
+        }
+      },
+      "get": {
+        "tags": ["Software"],
+        "summary": "Software-004 Query software related data (Solution Vendor-hosted)",
+        "description": "List e-permit records with pagination.[file:1]",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/category4S"
+          },
+          {
+            "$ref": "#/components/parameters/siteId"
+          },
+          {
+            "$ref": "#/components/parameters/supplierId"
+          },
+          {
+            "$ref": "#/components/parameters/pageNum"
+          },
+          {
+            "$ref": "#/components/parameters/pageSize"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SoftwareListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "Epermit": {
+        "type": "object",
+        "required": ["category4S", "siteId", "supplierId", "epermitProperties"],
+        "properties": {
+          "category4S": {
+            "type": "string",
+            "enum": ["e-permit"],
+            "example": "e-permit",
+            "description": "Fixed 4S category.[file:1]"
+          },
+          "siteId": {
+            "type": "string",
+            "example": "1693279120646",
+            "description": "Vendor-defined site key.[file:1]"
+          },
+          "cicSiteId": {
+            "type": "integer",
+            "example": 438493849,
+            "description": "CIC-standard site ID (optional).[file:1]"
+          },
+          "supplierId": {
+            "type": "string",
+            "example": "438",
+            "description": "Software supplier ID.[file:1]"
+          },
+          "pushAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-01-06T14:40:16+08:00",
+            "description": "Record update timestamp.[file:1]"
+          },
+          "epermitProperties": {
+            "type": "object",
+            "required": ["epermitId", "epermitName", "epermitUrl", "epermitStatus", "expirationTime", "createTime"],
+            "properties": {
+              "epermitId": {
+                "type": "string",
+                "example": "E-Permit-001",
+                "description": "Unique E-permit ID.[file:1]"
+              },
+              "epermitName": {
+                "type": "string",
+                "example": "Hot Works Permit",
+                "description": "Permit name (Hot Works, Working at Height, Excavation, etc.).[file:1]"
+              },
+              "epermitUrl": {
+                "type": "string",
+                "format": "uri",
+                "example": "https://example.com/permit/E-Permit-001.pdf",
+                "description": "URL to PDF/digital permit file.[file:1]"
+              },
+              "epermitStatus": {
+                "type": "integer",
+                "description": "Status: 1-Applied,2-Under Approval,3-Effective,4-Cancelled,5-Expired,6-Draft,7-Pending,8-Approved,9-Rejected,10-In Revision,11-On Hold,12-Completed,13-Archived.[file:1]",
+                "example": 3
+              },
+              "expirationTime": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2025-01-19T12:00:00+08:00",
+                "description": "Expiry date/time (ISO 8601).[file:1]"
+              },
+              "createTime": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2025-01-06T09:00:00+08:00",
+                "description": "Creation date/time (ISO 8601).[file:1]"
+              },
+              "permitType": {
+                "type": "string",
+                "enum": ["hot-work", "working-at-height", "excavation", "confined-space", "other"],
+                "example": "hot-work"
+              },
+              "applicant": {
+                "type": "string",
+                "example": "John Doe"
+              },
+              "validityPeriod": {
+                "type": "string",
+                "example": "7 days"
+              }
+            }
+          }
+        },
+        "description": "Electronic permits for high-risk activities with full lifecycle tracking.[file:1]"
+      },
+      "EpermitUpdate": {
+        "type": "object",
+        "required": ["epermitId"],
+        "properties": {
+          "epermitId": {
+            "type": "string",
+            "example": "E-Permit-001",
+            "description": "E-permit ID to update.[file:1]"
+          },
+          "epermitProperties": {
+            "$ref": "#/components/schemas/Epermit/properties/epermitProperties"
+          }
+        },
+        "description": "Update request with epermitId.[file:1]"
+      },
+      "SoftwareDeleteRequest": {
+        "type": "object",
+        "required": ["epermitId", "siteId"],
+        "properties": {
+          "epermitId": {
+            "type": "string",
+            "example": "E-Permit-001"
+          },
+          "siteId": {
+            "type": "string",
+            "example": "1693279120646"
+          }
+        },
+        "description": "Delete request by epermitId and siteId.[file:1]"
+      },
+      "ApiResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "example": 10000
+          },
+          "msg": {
+            "type": "string",
+            "example": "success"
+          },
+          "data": {
+            "$ref": "#/components/schemas/Epermit"
+          }
+        }
+      },
+      "SoftwareListResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "example": 10000
+          },
+          "msg": {
+            "type": "string",
+            "example": "success"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "list": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Epermit"
+                }
+              },
+              "totalCount": {
+                "type": "integer",
+                "example": 100
+              },
+              "pageSize": {
+                "type": "integer",
+                "example": 10
+              },
+              "pageNum": {
+                "type": "integer",
+                "example": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    "parameters": {
+      "category4S": {
+        "name": "category4S",
+        "in": "query",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "enum": ["e-permit"]
+        },
+        "example": "e-permit"
+      },
+      "siteId": {
+        "name": "siteId",
+        "in": "query",
+        "required": true,
+        "schema": {
+          "type": "string"
+        },
+        "example": "1693279120646"
+      },
+      "supplierId": {
+        "name": "supplierId",
+        "in": "query",
+        "schema": {
+          "type": "string"
+        },
+        "example": "438"
+      },
+      "pageNum": {
+        "name": "pageNum",
+        "in": "query",
+        "schema": {
+          "type": "integer",
+          "default": 1
+        }
+      },
+      "pageSize": {
+        "name": "pageSize",
+        "in": "query",
+        "schema": {
+          "type": "integer",
+          "default": 10,
+          "maximum": 200
+        }
+      }
+    },
+    "responses": {
+      "Success": {
+        "description": "Success",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "example": 10000
+                },
+                "msg": {
+                  "type": "string",
+                  "example": "success"
+                }
+              }
+            }
+          }
+        }
+      },
+      "BadRequest": {
+        "description": "Bad Request",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "example": 10002
+                },
+                "msg": {
+                  "type": "string",
+                  "example": "missing parameters: siteId"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

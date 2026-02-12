@@ -1,0 +1,293 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "CIC SSSS Basic Info APIs - Organization/Site Hierarchy",
+    "description": "Query APIs for site/zone hierarchy (CMP-001/002). CWRS-integrated org/contract/site/zone structure for cross-vendor data exchange. See section 4.1 & 2.13[file:1].",
+    "version": "1.0.0",
+    "contact": {
+      "name": "CIC SSSS"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.example.com/v1"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Site Info",
+      "description": "Organization/site/zone hierarchy queries (CMP-001/002)[file:1]"
+    }
+  ],
+  "paths": {
+    "/org-info": {
+      "get": {
+        "tags": ["Site Info"],
+        "summary": "CMP-001 Query site information list (Vendor-hosted)",
+        "description": "Paginated organization/contract/site hierarchy. Use cicSiteId for cross-vendor sync[file:1].",
+        "operationId": "querySiteInfoList",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {
+            "name": "cicSiteId",
+            "in": "query",
+            "schema": {"type": "integer"}
+          },
+          {
+            "name": "siteId",
+            "in": "query",
+            "schema": {"type": "string"}
+          },
+          {
+            "$ref": "#/components/parameters/pageNum"
+          },
+          {
+            "$ref": "#/components/parameters/pageSize"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Site hierarchy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SiteInfoListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/org-info/{siteId}/zones": {
+      "get": {
+        "tags": ["Site Info"],
+        "summary": "CMP-002 Query regional/zone information in site (Optional, Vendor-hosted)",
+        "description": "Zones/floors/sections within siteId. Use for granular location filtering[file:1].",
+        "operationId": "querySiteZones",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {
+            "name": "siteId",
+            "in": "path",
+            "required": true,
+            "schema": {"type": "string"}
+          },
+          {
+            "$ref": "#/components/parameters/pageNum"
+          },
+          {
+            "$ref": "#/components/parameters/pageSize"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Zone list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ZoneListResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "OrgInfo": {
+        "type": "object",
+        "description": "Nested organization/contract/site hierarchy[file:1]",
+        "properties": {
+          "orgId": {
+            "type": "string",
+            "description": "Contractor/organization ID (CWRS)"
+          },
+          "orgCode": {
+            "type": "string",
+            "description": "Contractor reference (not required)"
+          },
+          "fullName": {
+            "type": "object",
+            "properties": {
+              "en-HK": {"type": "string"},
+              "zh-HK": {"type": "string"},
+              "zh-CN": {"type": "string"}
+            }
+          },
+          "contracts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ContractInfo"
+            }
+          },
+          "enableStatus": {
+            "type": "boolean",
+            "example": true
+          }
+        }
+      },
+      "ContractInfo": {
+        "type": "object",
+        "properties": {
+          "cicSiteId": {
+            "type": "integer",
+            "description": "CWRS contract number → universal site ID[file:1]"
+          },
+          "siteId": {
+            "type": "string",
+            "description": "Vendor-defined worksite key (primary)[file:1]"
+          },
+          "siteCode": {
+            "type": "string",
+            "description": "Worksite display name (ContractShortName)[file:1]"
+          },
+          "name": {
+            "type": "object",
+            "properties": {
+              "en-HK": {"type": "string"},
+              "zh-HK": {"type": "string"}
+            }
+          },
+          "address": {
+            "type": "object",
+            "properties": {
+              "fullAddress": {"type": "string"},
+              "longitude": {"type": "number"},
+              "latitude": {"type": "number"},
+              "coordinateSystem": {
+                "type": "string",
+                "enum": ["WGS-84", "HK1980"]
+              }
+            }
+          },
+          "projectStatus": {
+            "type": "string",
+            "enum": ["planning", "construction", "testing", "completed"]
+          },
+          "engineeringNo": {
+            "type": "string"
+          },
+          "zones": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ZoneInfo"
+            }
+          },
+          "enableStatus": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ZoneInfo": {
+        "type": "object",
+        "properties": {
+          "zoneId": {
+            "type": "string",
+            "example": "floor-05"
+          },
+          "name": {
+            "type": "object",
+            "properties": {
+              "en-HK": {"type": "string", "example": "5/F"},
+              "zh-HK": {"type": "string", "example": "5樓"}
+            }
+          },
+          "zoneType": {
+            "type": "string",
+            "enum": ["floor", "area", "section", "bay"]
+          },
+          "enableStatus": {
+            "type": "boolean"
+          }
+        }
+      },
+      "SiteInfoListResponse": {
+        "type": "object",
+        "properties": {
+          "code": {"type": "integer", "example": 10000},
+          "msg": {"type": "string", "example": "success"},
+          "data": {
+            "type": "object",
+            "properties": {
+              "list": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/OrgInfo"
+                }
+              },
+              "totalCount": {"type": "integer"},
+              "pageNum": {"type": "integer"},
+              "pageSize": {"type": "integer"}
+            }
+          }
+        }
+      },
+      "ZoneListResponse": {
+        "type": "object",
+        "properties": {
+          "code": {"type": "integer", "example": 10000},
+          "msg": {"type": "string", "example": "success"},
+          "data": {
+            "type": "object",
+            "properties": {
+              "siteId": {"type": "string"},
+              "siteCode": {"type": "string"},
+              "zones": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/ZoneInfo"
+                }
+              }
+            }
+          }
+        }
+      },
+      "ApiResponse": {
+        "type": "object",
+        "properties": {
+          "code": {"type": "integer", "example": 10000},
+          "msg": {"type": "string", "example": "success"},
+          "data": {"type": "null"}
+        }
+      }
+    },
+    "parameters": {
+      "pageNum": {
+        "name": "pageNum",
+        "in": "query",
+        "schema": {"type": "integer", "default": 1, "minimum": 1}
+      },
+      "pageSize": {
+        "name": "pageSize",
+        "in": "query",
+        "schema": {"type": "integer", "default": 10, "maximum": 100}
+      }
+    },
+    "responses": {
+      "NotFound": {
+        "description": "Site not found",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ApiResponse"
+            }
+          }
+        }
+      }
+    }
+  }
+}
+

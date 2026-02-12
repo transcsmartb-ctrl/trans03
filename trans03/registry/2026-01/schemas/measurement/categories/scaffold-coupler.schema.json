@@ -1,0 +1,286 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "CIC SSSS Measurement APIs - Scaffold Coupler",
+    "description": "APIs for pushing/querying scaffold-coupler measurements (Measurement-001/002). Scaffold stress, vibration, integrity monitoring. See Appendix D.[file:1]",
+    "version": "1.0.0",
+    "contact": {
+      "name": "CIC SSSS"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.example.com/v1"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Measurements",
+      "description": "Continuous IoT measurement data push/query (CMP-hosted:001, Vendor-hosted:002).[file:1]"
+    }
+  ],
+  "paths": {
+    "/measurements": {
+      "post": {
+        "tags": ["Measurements"],
+        "summary": "Measurement-001 Push scaffold-coupler measurements (CMP-hosted)",
+        "description": "Push continuous scaffold structural data (array format).[file:1]",
+        "operationId": "pushScaffoldCouplerMeasurements",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/ScaffoldCouplerMeasurement"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiSuccessResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": ["Measurements"],
+        "summary": "Measurement-002 Query scaffold-coupler measurements (Solution Vendor-hosted)",
+        "description": "Paginated scaffold integrity history.[file:1]",
+        "parameters": [
+          {
+            "name": "category4S",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": ["scaffold-coupler"]
+            }
+          },
+          {
+            "$ref": "#/components/parameters/siteId"
+          },
+          {
+            "$ref": "#/components/parameters/supplierId"
+          },
+          {
+            "$ref": "#/components/parameters/deviceSn"
+          },
+          {
+            "$ref": "#/components/parameters/startTime"
+          },
+          {
+            "$ref": "#/components/parameters/endTime"
+          },
+          {
+            "$ref": "#/components/parameters/pageNum"
+          },
+          {
+            "$ref": "#/components/parameters/pageSize"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeasurementListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "ScaffoldCouplerMeasurement": {
+        "type": "object",
+        "required": ["category4S", "siteId", "supplierId", "deviceSn", "pushAt", "measurements"],
+        "properties": {
+          "category4S": {
+            "type": "string",
+            "const": "scaffold-coupler",
+            "description": "Fixed category.[file:1]"
+          },
+          "siteId": {
+            "type": "string",
+            "example": "1693279120646"
+          },
+          "cicSiteId": {
+            "type": "integer",
+            "example": 438493849
+          },
+          "supplierId": {
+            "type": "string",
+            "example": "438"
+          },
+          "deviceSn": {
+            "type": "string",
+            "example": "SC-001"
+          },
+          "pushAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-01-06T14:40:16+08:00"
+          },
+          "measurements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MeasurementItem"
+            }
+          },
+          "additionalMeasurements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MeasurementItem"
+            }
+          },
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "locationDesc": {
+                "type": "string",
+                "example": "North scaffold tower"
+              },
+              "remark": {
+                "type": "string",
+                "example": "High wind detected"
+              }
+            }
+          }
+        },
+        "description": "Scaffold coupler structural measurement.[file:1]"
+      },
+      "MeasurementItem": {
+        "type": "object",
+        "required": ["metricType", "dataType", "value", "observedAt"],
+        "properties": {
+          "metricType": {
+            "type": "string",
+            "enum": ["stressLoad", "vibration", "tiltAngle", "connectionIntegrity", "weightLoad", "windSpeed", "expirationDaysRemaining", "onlineStatus"],
+            "example": "stressLoad"
+          },
+          "dataType": {
+            "type": "string",
+            "enum": ["number", "integer", "boolean"],
+            "example": "number"
+          },
+          "value": {
+            "oneOf": [
+              {"type": "number"},
+              {"type": "integer"},
+              {"type": "boolean"}
+            ],
+            "example": 85.2
+          },
+          "unit": {
+            "type": "string",
+            "example": "%"
+          },
+          "observedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-01-06T14:40:10+08:00"
+          },
+          "safeThreshold": {
+            "type": "number",
+            "example": 90.0,
+            "description": "Safety threshold"
+          },
+          "alarmActive": {
+            "type": "boolean",
+            "example": false
+          }
+        }
+      },
+      "ApiSuccessResponse": {
+        "type": "object",
+        "properties": {
+          "code": {"type": "integer", "example": 10000},
+          "msg": {"type": "string", "example": "success"},
+          "data": {"type": "null"}
+        }
+      },
+      "MeasurementListResponse": {
+        "type": "object",
+        "properties": {
+          "code": {"type": "integer", "example": 10000},
+          "msg": {"type": "string", "example": "success"},
+          "data": {
+            "type": "object",
+            "properties": {
+              "list": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/ScaffoldCouplerMeasurement"
+                }
+              },
+              "totalCount": {"type": "integer"},
+              "pageNum": {"type": "integer"},
+              "pageSize": {"type": "integer"}
+            }
+          }
+        }
+      }
+    },
+    "parameters": {
+      "siteId": {
+        "name": "siteId",
+        "in": "query",
+        "required": true,
+        "schema": {"type": "string"}
+      },
+      "supplierId": {
+        "name": "supplierId",
+        "in": "query",
+        "required": true,
+        "schema": {"type": "string"}
+      },
+      "deviceSn": {
+        "name": "deviceSn",
+        "in": "query",
+        "schema": {"type": "string"}
+      },
+      "startTime": {
+        "name": "startTime",
+        "in": "query",
+        "schema": {"type": "string", "format": "date-time"}
+      },
+      "endTime": {
+        "name": "endTime",
+        "in": "query",
+        "schema": {"type": "string", "format": "date-time"}
+      },
+      "pageNum": {
+        "name": "pageNum",
+        "in": "query",
+        "schema": {"type": "integer", "default": 1}
+      },
+      "pageSize": {
+        "name": "pageSize",
+        "in": "query",
+        "schema": {"type": "integer", "default": 10, "maximum": 1000}
+      }
+    }
+  }
+}

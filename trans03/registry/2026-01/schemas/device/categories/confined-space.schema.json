@@ -1,0 +1,398 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "CIC SSSS Device APIs - Confined Space Device",
+    "description": "APIs for adding/updating/querying confined-space-device (e.g., gas detectors). From CIC SSSS API Framework v0.16 (Device-001/002/004). See Appendix B.[file:1]",
+    "version": "1.0.0",
+    "contact": {
+      "name": "CIC SSSS"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.example.com/v1"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Devices",
+      "description": "IoT Device Management for 4S categories.[file:1]"
+    }
+  ],
+  "paths": {
+    "/devices": {
+      "post": {
+        "tags": ["Devices"],
+        "summary": "Device-001 Add 4S IoT device data (CMP-hosted)",
+        "description": "Add new confined-space-device record.[file:1]",
+        "operationId": "addConfinedSpaceDevice",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfinedSpaceDevice"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          }
+        }
+      },
+      "patch": {
+        "tags": ["Devices"],
+        "summary": "Device-002 Update 4S IoT device data",
+        "description": "Partial update for confined-space-device by deviceSn in body.[file:1]",
+        "operationId": "updateConfinedSpaceDevice",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfinedSpaceDeviceUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/Success"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Devices"],
+        "summary": "Device-003 Delete 4S IoT device data",
+        "description": "Delete by deviceSn and siteId in body.[file:1]",
+        "operationId": "deleteConfinedSpaceDevice",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceDeleteRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/Success"
+          }
+        }
+      },
+      "get": {
+        "tags": ["Devices"],
+        "summary": "Device-004 Query 4S IoT devices (Solution Vendor-hosted)",
+        "description": "List confined-space-device records with pagination.[file:1]",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/siteId"
+          },
+          {
+            "$ref": "#/components/parameters/pageNum"
+          },
+          {
+            "$ref": "#/components/parameters/pageSize"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "ConfinedSpaceDevice": {
+        "type": "object",
+        "required": ["category4S", "siteId", "supplierId", "pushAt", "deviceProperties"],
+        "properties": {
+          "category4S": {
+            "type": "string",
+            "enum": ["confined-space"],
+            "example": "confined-space",
+            "description": "Fixed 4S category.[file:1]"
+          },
+          "siteId": {
+            "type": "string",
+            "example": "1693279120646",
+            "description": "Vendor-defined site key.[file:1]"
+          },
+          "cicSiteId": {
+            "type": "integer",
+            "example": 100001,
+            "description": "CIC-standard site ID (optional).[file:1]"
+          },
+          "supplierId": {
+            "type": "string",
+            "example": "438",
+            "description": "Device supplier ID.[file:1]"
+          },
+          "pushAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-01-06T14:40:16+08:00",
+            "description": "ISO 8601 push timestamp.[file:1]"
+          },
+          "deviceProperties": {
+            "type": "object",
+            "required": ["deviceSn", "deviceName", "spaceName", "locationType"],
+            "properties": {
+              "deviceSn": {
+                "type": "string",
+                "example": "GAS-DETECTOR-001"
+              },
+              "deviceName": {
+                "type": "string",
+                "example": "confined-space-gas-monitor-1"
+              },
+              "spaceName": {
+                "type": "string",
+                "example": "Room A"
+              },
+              "locationType": {
+                "type": "integer",
+                "enum": [1, 2],
+                "example": 1,
+                "description": "1=GPS positioning (use longitude/latitude), 2=Floor plan (use planX/planY).[file:1]"
+              }
+            }
+          },
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "locationUrl": {
+                "type": "string",
+                "format": "uri",
+                "example": "https://example.com/floorplan.jpg",
+                "description": "Floor plan URL.[file:1]"
+              },
+              "locationDesc": {
+                "type": "string",
+                "example": "East entrance confined space"
+              },
+              "planX": {
+                "type": "number",
+                "example": 123.456,
+                "description": "X-axis for floor plan (if locationType=2).[file:1]"
+              },
+              "planY": {
+                "type": "number",
+                "example": 456.789
+              },
+              "planZ": {
+                "type": "number",
+                "example": 10.5,
+                "description": "Z-axis/elevation.[file:1]"
+              },
+              "longitude": {
+                "type": "number",
+                "example": 114.158,
+                "description": "Longitude (if locationType=1).[file:1]"
+              },
+              "latitude": {
+                "type": "number",
+                "example": 22.319
+              }
+            }
+          },
+          "remark": {
+            "type": "string",
+            "example": "Gas detector for confined space Room A"
+          }
+        },
+        "description": "Full confined-space-device record (gas detectors for harmful gas monitoring).[file:1]"
+      },
+      "ConfinedSpaceDeviceUpdate": {
+        "type": "object",
+        "required": ["deviceSn"],
+        "properties": {
+          "deviceSn": {
+            "type": "string",
+            "example": "GAS-DETECTOR-001",
+            "description": "Device serial number to update.[file:1]"
+          },
+          "deviceProperties": {
+            "$ref": "#/components/schemas/ConfinedSpaceDevice/properties/deviceProperties"
+          },
+          "additionalProperties": {
+            "$ref": "#/components/schemas/ConfinedSpaceDevice/properties/additionalProperties"
+          },
+          "remark": {
+            "type": "string"
+          }
+        },
+        "description": "Update request with deviceSn.[file:1]"
+      },
+      "DeviceDeleteRequest": {
+        "type": "object",
+        "required": ["deviceSn", "siteId"],
+        "properties": {
+          "deviceSn": {
+            "type": "string",
+            "example": "GAS-DETECTOR-001"
+          },
+          "siteId": {
+            "type": "string",
+            "example": "1693279120646"
+          }
+        },
+        "description": "Delete request by deviceSn and siteId.[file:1]"
+      },
+      "ApiResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "example": 10000
+          },
+          "msg": {
+            "type": "string",
+            "example": "success"
+          },
+          "data": {
+            "$ref": "#/components/schemas/ConfinedSpaceDevice"
+          }
+        }
+      },
+      "DeviceListResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "example": 10000
+          },
+          "msg": {
+            "type": "string",
+            "example": "success"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "list": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/ConfinedSpaceDevice"
+                }
+              },
+              "totalCount": {
+                "type": "integer",
+                "example": 100
+              },
+              "pageSize": {
+                "type": "integer",
+                "example": 10
+              },
+              "pageNum": {
+                "type": "integer",
+                "example": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    "parameters": {
+      "siteId": {
+        "name": "siteId",
+        "in": "query",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      "pageNum": {
+        "name": "pageNum",
+        "in": "query",
+        "schema": {
+          "type": "integer",
+          "default": 1
+        }
+      },
+      "pageSize": {
+        "name": "pageSize",
+        "in": "query",
+        "schema": {
+          "type": "integer",
+          "default": 10,
+          "maximum": 200
+        }
+      }
+    },
+    "responses": {
+      "Success": {
+        "description": "Success",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "example": 10000
+                },
+                "msg": {
+                  "type": "string",
+                  "example": "success"
+                }
+              }
+            }
+          }
+        }
+      },
+      "BadRequest": {
+        "description": "Bad Request",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "example": 10002
+                },
+                "msg": {
+                  "type": "string",
+                  "example": "missing parameters: siteId"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

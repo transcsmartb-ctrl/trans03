@@ -1,0 +1,402 @@
+
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "CIC SSSS Device Base APIs",
+    "description": "Unified Device Management APIs for all 4S IoT categories (Device-001/002/003/004). Supports category-specific schemas via discriminator. From CIC SSSS API Framework v0.16.[file:1]",
+    "version": "1.0.0",
+    "contact": {
+      "name": "CIC SSSS"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.example.com/v1"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Devices",
+      "description": "IoT Device CRUD operations (Add/Update/Delete/Query) for all 4S categories.[file:1]"
+    }
+  ],
+  "paths": {
+    "/devices": {
+      "post": {
+        "tags": ["Devices"],
+        "summary": "Device-001 Add 4S IoT device data (CMP-hosted)",
+        "description": "Register new 4S device. Uses category4S discriminator to validate schema.[file:1]",
+        "operationId": "addDevice",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceBase"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          }
+        }
+      },
+      "patch": {
+        "tags": ["Devices"],
+        "summary": "Device-002 Update 4S IoT device data",
+        "description": "Partial update by deviceSn. Supports all categories.[file:1]",
+        "operationId": "updateDevice",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceUpdateBase"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/Success"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Devices"],
+        "summary": "Device-003 Delete 4S IoT device data",
+        "description": "Delete by deviceSn and siteId. Works across all categories.[file:1]",
+        "operationId": "deleteDevice",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceDeleteRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/Success"
+          }
+        }
+      },
+      "get": {
+        "tags": ["Devices"],
+        "summary": "Device-004 Query 4S IoT devices (Solution Vendor-hosted)",
+        "description": "Paginated list filtered by category4S, siteId, supplierId, deviceSn.[file:1]",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/category4S"
+          },
+          {
+            "$ref": "#/components/parameters/siteId"
+          },
+          {
+            "$ref": "#/components/parameters/supplierId"
+          },
+          {
+            "$ref": "#/components/parameters/deviceSn"
+          },
+          {
+            "$ref": "#/components/parameters/pageNum"
+          },
+          {
+            "$ref": "#/components/parameters/pageSize"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "DeviceBase": {
+        "description": "Polymorphic base schema for all 4S device categories. Discriminator: category4S.[file:1]",
+        "discriminator": {
+          "propertyName": "category4S",
+          "mapping": {
+            "smart-monitoring-device": "#/components/schemas/SmartMonitoringDevice",
+            "tower-crane": "#/components/schemas/TowerCraneDevice",
+            "mobile-plant-operation": "#/components/schemas/MobilePlantDevice",
+            "ai-monitoring": "#/components/schemas/AiMonitoringDevice",
+            "confined-space": "#/components/schemas/ConfinedSpaceDevice",
+            "lock-key": "#/components/schemas/LockKeyDevice",
+            "scaffold-coupler": "#/components/schemas/ScaffoldCouplerDevice",
+            "mewp": "#/components/schemas/MewpDevice",
+            "others": "#/components/schemas/OthersDevice"
+          }
+        },
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/SmartMonitoringDevice"
+          },
+          {
+            "$ref": "#/components/schemas/TowerCraneDevice"
+          },
+          {
+            "$ref": "#/components/schemas/MobilePlantDevice"
+          },
+          {
+            "$ref": "#/components/schemas/AiMonitoringDevice"
+          },
+          {
+            "$ref": "#/components/schemas/ConfinedSpaceDevice"
+          },
+          {
+            "$ref": "#/components/schemas/LockKeyDevice"
+          },
+          {
+            "$ref": "#/components/schemas/ScaffoldCouplerDevice"
+          },
+          {
+            "$ref": "#/components/schemas/MewpDevice"
+          },
+          {
+            "$ref": "#/components/schemas/OthersDevice"
+          }
+        ]
+      },
+      "DeviceUpdateBase": {
+        "description": "Base update schema - requires deviceSn, optional category-specific fields.[file:1]",
+        "type": "object",
+        "required": ["deviceSn"],
+        "properties": {
+          "deviceSn": {
+            "type": "string",
+            "description": "Device serial to update.[file:1]"
+          },
+          "category4S": {
+            "type": "string",
+            "description": "Category discriminator (optional for updates).[file:1]"
+          }
+        },
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/SmartMonitoringDeviceUpdate"
+          },
+          {
+            "$ref": "#/components/schemas/TowerCraneDeviceUpdate"
+          },
+          {
+            "$ref": "#/components/schemas/MobilePlantDeviceUpdate"
+          },
+          {
+            "$ref": "#/components/schemas/AiMonitoringDeviceUpdate"
+          },
+          {
+            "$ref": "#/components/schemas/ConfinedSpaceDeviceUpdate"
+          },
+          {
+            "$ref": "#/components/schemas/LockKeyDeviceUpdate"
+          },
+          {
+            "$ref": "#/components/schemas/ScaffoldCouplerDeviceUpdate"
+          },
+          {
+            "$ref": "#/components/schemas/MewpDeviceUpdate"
+          },
+          {
+            "$ref": "#/components/schemas/OthersDeviceUpdate"
+          }
+        ]
+      },
+      "DeviceDeleteRequest": {
+        "type": "object",
+        "required": ["deviceSn", "siteId"],
+        "properties": {
+          "deviceSn": {
+            "type": "string",
+            "example": "SN-8655078237"
+          },
+          "siteId": {
+            "type": "string",
+            "example": "1693279120646"
+          },
+          "category4S": {
+            "type": "string"
+          }
+        },
+        "description": "Universal delete request.[file:1]"
+      },
+      "ApiResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "example": 10000
+          },
+          "msg": {
+            "type": "string",
+            "example": "success"
+          },
+          "data": {
+            "$ref": "#/components/schemas/DeviceBase"
+          }
+        }
+      },
+      "DeviceListResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "example": 10000
+          },
+          "msg": {
+            "type": "string",
+            "example": "success"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "list": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/DeviceBase"
+                }
+              },
+              "totalCount": {
+                "type": "integer",
+                "example": 100
+              },
+              "pageSize": {
+                "type": "integer",
+                "example": 10
+              },
+              "pageNum": {
+                "type": "integer",
+                "example": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    "parameters": {
+      "category4S": {
+        "name": "category4S",
+        "in": "query",
+        "schema": {
+          "type": "string",
+          "enum": ["smart-monitoring-device", "tower-crane", "mobile-plant-operation", "ai-monitoring", "confined-space", "lock-key", "scaffold-coupler", "mewp", "others"]
+        }
+      },
+      "siteId": {
+        "name": "siteId",
+        "in": "query",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      "supplierId": {
+        "name": "supplierId",
+        "in": "query",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "deviceSn": {
+        "name": "deviceSn",
+        "in": "query",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "pageNum": {
+        "name": "pageNum",
+        "in": "query",
+        "schema": {
+          "type": "integer",
+          "default": 1
+        }
+      },
+      "pageSize": {
+        "name": "pageSize",
+        "in": "query",
+        "schema": {
+          "type": "integer",
+          "default": 10,
+          "maximum": 200
+        }
+      }
+    },
+    "responses": {
+      "Success": {
+        "description": "Success",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "example": 10000
+                },
+                "msg": {
+                  "type": "string",
+                  "example": "success"
+                }
+              }
+            }
+          }
+        }
+      },
+      "BadRequest": {
+        "description": "Bad Request",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "example": 10002
+                },
+                "msg": {
+                  "type": "string",
+                  "example": "missing parameters: siteId"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

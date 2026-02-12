@@ -1,0 +1,218 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "CIC SSSS Measurement Base APIs",
+    "description": "Unified Measurement APIs for all 4S categories (Measurement-001/002). Polymorphic via category4S discriminator. Framework v0.16.[file:1]",
+    "version": "1.0.0",
+    "contact": {
+      "name": "CIC SSSS"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.example.com/v1"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Measurements",
+      "description": "IoT measurement streaming (001: CMP push, 002: Vendor query).[file:1]"
+    }
+  ],
+  "paths": {
+    "/measurements": {
+      "post": {
+        "tags": ["Measurements"],
+        "summary": "Measurement-001 Push 4S measurements (CMP-hosted)",
+        "description": "Continuous measurement streaming. Array accepts any category4S type.[file:1]",
+        "operationId": "pushMeasurements",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/MeasurementBase"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiSuccessResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": ["Measurements"],
+        "summary": "Measurement-002 Query 4S measurements (Solution Vendor-hosted)",
+        "description": "Paginated history by category4S/device/time-range. Sorted by pushAt DESC.[file:1]",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/category4S"
+          },
+          {
+            "$ref": "#/components/parameters/siteId"
+          },
+          {
+            "$ref": "#/components/parameters/supplierId"
+          },
+          {
+            "$ref": "#/components/parameters/deviceSn"
+          },
+          {
+            "$ref": "#/components/parameters/startTime"
+          },
+          {
+            "$ref": "#/components/parameters/endTime"
+          },
+          {
+            "$ref": "#/components/parameters/pageNum"
+          },
+          {
+            "$ref": "#/components/parameters/pageSize"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeasurementListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "MeasurementBase": {
+        "description": "Polymorphic base for all measurement categories. Discriminator: category4S.[file:1]",
+        "discriminator": {
+          "propertyName": "category4S",
+          "mapping": {
+            "smart-monitoring-device": "#/components/schemas/SmartMonitoringMeasurement",
+            "tower-crane": "#/components/schemas/TowerCraneMeasurement",
+            "mobile-plant-operation": "#/components/schemas/MobilePlantMeasurement",
+            "ai-monitoring": "#/components/schemas/AiMonitoringMeasurement",
+            "confined-space": "#/components/schemas/ConfinedSpaceMeasurement",
+            "lock-key": "#/components/schemas/LockKeyMeasurement",
+            "scaffold-coupler": "#/components/schemas/ScaffoldCouplerMeasurement",
+            "mewp": "#/components/schemas/MewpMeasurement",
+            "others": "#/components/schemas/OthersMeasurement"
+          }
+        },
+        "oneOf": [
+          {"$ref": "#/components/schemas/SmartMonitoringMeasurement"},
+          {"$ref": "#/components/schemas/TowerCraneMeasurement"},
+          {"$ref": "#/components/schemas/MobilePlantMeasurement"},
+          {"$ref": "#/components/schemas/AiMonitoringMeasurement"},
+          {"$ref": "#/components/schemas/ConfinedSpaceMeasurement"},
+          {"$ref": "#/components/schemas/LockKeyMeasurement"},
+          {"$ref": "#/components/schemas/ScaffoldCouplerMeasurement"},
+          {"$ref": "#/components/schemas/MewpMeasurement"},
+          {"$ref": "#/components/schemas/OthersMeasurement"}
+        ]
+      },
+      "ApiSuccessResponse": {
+        "type": "object",
+        "properties": {
+          "code": {"type": "integer", "example": 10000},
+          "msg": {"type": "string", "example": "success"},
+          "data": {"type": "null"}
+        }
+      },
+      "MeasurementListResponse": {
+        "type": "object",
+        "properties": {
+          "code": {"type": "integer", "example": 10000},
+          "msg": {"type": "string", "example": "success"},
+          "data": {
+            "type": "object",
+            "properties": {
+              "list": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/MeasurementBase"
+                }
+              },
+              "totalCount": {"type": "integer", "example": 215},
+              "pageNum": {"type": "integer", "example": 1},
+              "pageSize": {"type": "integer", "example": 10}
+            }
+          }
+        }
+      }
+    },
+    "parameters": {
+      "category4S": {
+        "name": "category4S",
+        "in": "query",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "enum": ["smart-monitoring-device", "tower-crane", "mobile-plant-operation", "ai-monitoring", "confined-space", "lock-key", "scaffold-coupler", "mewp", "others"]
+        }
+      },
+      "siteId": {
+        "name": "siteId",
+        "in": "query",
+        "required": true,
+        "schema": {"type": "string", "example": "1693279120646"}
+      },
+      "supplierId": {
+        "name": "supplierId",
+        "in": "query",
+        "required": true,
+        "schema": {"type": "string", "example": "438"}
+      },
+      "deviceSn": {
+        "name": "deviceSn",
+        "in": "query",
+        "schema": {"type": "string", "example": "SN3203920390239"}
+      },
+      "startTime": {
+        "name": "startTime",
+        "in": "query",
+        "schema": {"type": "string", "format": "date-time", "example": "2025-01-01T09:00:00+08:00"}
+      },
+      "endTime": {
+        "name": "endTime",
+        "in": "query",
+        "schema": {"type": "string", "format": "date-time", "example": "2025-01-10T09:00:00+08:00"}
+      },
+      "pageNum": {
+        "name": "pageNum",
+        "in": "query",
+        "schema": {"type": "integer", "default": 1}
+      },
+      "pageSize": {
+        "name": "pageSize",
+        "in": "query",
+        "schema": {"type": "integer", "default": 10, "maximum": 1000}
+      }
+    }
+  }
+}
+
