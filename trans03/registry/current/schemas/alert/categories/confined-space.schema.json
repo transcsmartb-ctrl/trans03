@@ -1,385 +1,211 @@
 {
   "openapi": "3.0.3",
   "info": {
-    "title": "CIC SSSS Alert APIs - Confined Space Monitoring",
-    "description": "APIs for confined space monitoring alerts (Alert-001/002/004). Gas levels (O2, CO, CO2, H2S, CH4), temperature, humidity, LEL. See Appendix E.[file:1]",
-    "version": "1.0.0",
-    "contact": {
-      "name": "CIC SSSS"
-    }
+    "title": "4S Alert Confined-Space Category Schema",
+    "description": "OpenAPI 3.0.3 schema for confined-space alerts (e.g., gas detectors for O2, CO2, H2S; high crowd density), extending AlertBase. From CIC SSSS Appendix E Confined-Space (p.167), scenario 4/11.[file:1]",
+    "version": "current"
   },
   "servers": [
     {
-      "url": "https://api.example.com/v1"
+      "url": "https://your-domain.example.com/api/v1"
     }
   ],
-  "tags": [
-    {
-      "name": "Alerts",
-      "description": "Event-driven confined space alerts (001/002: push/update, 004: query).[file:1]"
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "OAuth 2.0 Bearer token.[file:1]"
+      }
+    },
+    "schemas": {
+      "AlertConfinedSpace": {
+        "description": "Confined-space specific alert, allOf AlertBase.",
+        "allOf": [
+          {"$ref": "#/components/schemas/AlertBase"},
+          {
+            "type": "object",
+            "properties": {
+              "category4S": {
+                "const": "confined-space",
+                "description": "Fixed confined-space category.[file:1]"
+              },
+              "alertProperties": {
+                "type": "object",
+                "properties": {
+                  "alertType": {
+                    "type": "string",
+                    "enum": [
+                      "humidity-alert",
+                      "temperature-alert",
+                      "co-alert",
+                      "co2-alert",
+                      "o2-alert",
+                      "hcho-alert",
+                      "tvoc-alert",
+                      "pm25-alert",
+                      "pm10-alert",
+                      "h2s-alert",
+                      "ch4-alert",
+                      "windSpeed-alert",
+                      "lel-alert",
+                      "illuminance-alert",
+                      "high-crowd-density"
+                    ],
+                    "description": "Gas/environmental alerts (Appendix H); high-crowd-density from scenario 4.[file:1]",
+                    "example": "o2-alert"
+                  }
+                }
+              },
+              "bioStatus": {
+                "type": "boolean",
+                "description": "Biometric status of workers in space (e.g., alive/present).[file:1]",
+                "example": true
+              },
+              "sosFlag": {
+                "type": "boolean",
+                "description": "SOS emergency flag for confined space rescue.[file:1]",
+                "example": false
+              },
+              "thresholdMax": {
+                "type": "number",
+                "description": "Upper threshold exceeded (e.g., CO2 ppm).[file:1]",
+                "example": 1000
+              },
+              "thresholdMin": {
+                "type": "number",
+                "description": "Lower threshold violated (e.g., O2 %).[file:1]",
+                "example": 19.5
+              }
+            },
+            "required": ["category4S"]
+          }
+        ]
+      },
+      "AlertBase": {
+        "$ref": "../alert/base.schema.json#"
+      },
+      "GasLevel": {
+        "type": "object",
+        "properties": {
+          "gasType": {"type": "string", "enum": ["O2", "CO2", "CO", "H2S", "CH4"], "example": "O2"},
+          "value": {"type": "number", "example": 18.5},
+          "unit": {"type": "string", "example": "VOL"}
+        },
+        "description": "Measured gas level tied to alertNum/thresholds.[file:1]"
+      },
+      "SuccessResponse": {
+        "type": "object",
+        "properties": {
+          "code": {"type": "integer", "example": 10000},
+          "msg": {"type": "string", "example": "success"}
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "code": {"type": "integer", "example": 10002},
+          "msg": {"type": "string", "example": "missing parameters"}
+        }
+      }
     }
-  ],
+  },
   "paths": {
-    "/alerts": {
+    "/alerts/confined-space": {
       "post": {
-        "tags": ["Alerts"],
-        "summary": "Alert-001 Add confined-space alert (CMP-hosted)",
-        "description": "Push new confined space detection alert (array format).[file:1]",
+        "tags": ["Confined-Space Alerts"],
+        "summary": "Alert-001: Add confined-space alert (e.g., low O2, high CO2).[file:1]",
         "operationId": "addConfinedSpaceAlert",
         "security": [{"bearerAuth": []}],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/ConfinedSpaceAlert"
-                }
-              }
+              "schema": {"$ref": "#/components/schemas/AlertConfinedSpace"}
             }
           }
         },
-        "responses": {
-          "200": {
-            "$ref": "#/components/responses/Success"
-          }
-        }
-      },
-      "patch": {
-        "tags": ["Alerts"],
-        "summary": "Alert-002 Update confined-space alert",
-        "description": "Update confined space alert status/message.[file:1]",
-        "operationId": "updateConfinedSpaceAlert",
-        "security": [{"bearerAuth": []}],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/ConfinedSpaceAlert"
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "$ref": "#/components/responses/Success"
-          }
-        }
-      },
-      "get": {
-        "tags": ["Alerts"],
-        "summary": "Alert-004 Query confined-space alerts (Vendor-hosted)",
-        "description": "Paginated confined space alerts by time range.[file:1]",
-        "parameters": [
-          {
-            "name": "category4S",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "enum": ["confined-space"]
-            }
-          },
-          {
-            "$ref": "#/components/parameters/siteId"
-          },
-          {
-            "$ref": "#/components/parameters/supplierId"
-          },
-          {
-            "$ref": "#/components/parameters/startTime"
-          },
-          {
-            "$ref": "#/components/parameters/endTime"
-          },
-          {
-            "$ref": "#/components/parameters/pageNum"
-          },
-          {
-            "$ref": "#/components/parameters/pageSize"
-          }
-        ],
         "responses": {
           "200": {
             "description": "Success",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AlertListResponse"
-                }
+                "schema": {"$ref": "#/components/schemas/SuccessResponse"}
               }
             }
-          }
+          },
+          "400": {"$ref": "#/components/schemas/ErrorResponse"},
+          "413": {"description": "Payload too large (>10MB).[file:1]"},
+          "429": {"description": "Rate limited.[file:1]"}
         }
-      }
-    },
-    "/alerts/media": {
-      "post": {
-        "tags": ["Alerts"],
-        "summary": "Alert-003 Push confined-space alert media",
-        "description": "Upload confined space alert video/photo.[file:1]",
-        "operationId": "pushConfinedSpaceAlertMedia",
+      },
+      "get": {
+        "tags": ["Confined-Space Alerts"],
+        "summary": "Alert-004: Query confined-space alerts (filter by gas type, thresholds).[file:1]",
+        "operationId": "queryConfinedSpaceAlerts",
         "security": [{"bearerAuth": []}],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ConfinedSpaceMediaRequest"
-              }
-            }
+        "parameters": [
+          {
+            "name": "siteId",
+            "in": "query",
+            "required": true,
+            "schema": {"type": "string"}
+          },
+          {
+            "name": "supplierId",
+            "in": "query",
+            "required": true,
+            "schema": {"type": "string"}
+          },
+          {
+            "name": "alertType",
+            "in": "query",
+            "schema": {"$ref": "#/components/schemas/AlertConfinedSpace/properties/alertProperties/properties/alertType"}
+          },
+          {
+            "name": "sosFlag",
+            "in": "query",
+            "schema": {"type": "boolean"}
+          },
+          {
+            "name": "minAlertNum",
+            "in": "query",
+            "schema": {"type": "number", "description": "Min alertNum (e.g., O2 <19.5)"}
+          },
+          {
+            "name": "pageNum",
+            "in": "query",
+            "schema": {"type": "integer", "default": 1}
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {"type": "integer", "default": 10, "maximum": 200}
           }
-        },
+        ],
         "responses": {
           "200": {
-            "$ref": "#/components/responses/Success"
-          }
-        }
-      }
-    }
-  },
-  "components": {
-    "securitySchemes": {
-      "bearerAuth": {
-        "type": "http",
-        "scheme": "bearer",
-        "bearerFormat": "JWT"
-      }
-    },
-    "schemas": {
-      "ConfinedSpaceAlert": {
-        "type": "object",
-        "required": ["category4S", "siteId", "supplierId", "deviceSn", "pushAt", "alertProperties"],
-        "properties": {
-          "category4S": {
-            "type": "string",
-            "const": "confined-space"
-          },
-          "siteId": {
-            "type": "string",
-            "example": "1693279120646"
-          },
-          "cicSiteId": {
-            "type": "integer",
-            "example": 438493849
-          },
-          "supplierId": {
-            "type": "string",
-            "example": "438"
-          },
-          "deviceSn": {
-            "type": "string",
-            "example": "CS-MON-001"
-          },
-          "pushAt": {
-            "type": "string",
-            "format": "date-time",
-            "example": "2025-01-06T14:40:16+08:00"
-          },
-          "alertProperties": {
-            "$ref": "#/components/schemas/ConfinedSpaceAlertProperties"
-          },
-          "additionalProperties": {
-            "type": "object",
-            "properties": {
-              "imageUrl": {
-                "type": "string",
-                "format": "uri"
-              },
-              "notifyRecipient": {
-                "type": "object",
-                "properties": {
-                  "name": {"type": "string"},
-                  "phone": {"type": "string"}
+            "description": "Paginated alerts",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {"type": "integer"},
+                    "msg": {"type": "string"},
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "list": {"type": "array", "items": {"$ref": "#/components/schemas/AlertConfinedSpace"}},
+                        "totalCount": {"type": "integer"},
+                        "pageNum": {"type": "integer"},
+                        "pageSize": {"type": "integer"}
+                      }
+                    }
+                  }
                 }
-              },
-              "triggerPersonnel": {
-                "type": "object",
-                "properties": {
-                  "id": {"type": "string"},
-                  "name": {"type": "string"}
-                }
-              },
-              "confidence": {
-                "type": "number",
-                "minimum": 0,
-                "maximum": 1
-              },
-              "thresholdMax": {
-                "type": "number",
-                "example": 30
-              },
-              "thresholdMin": {
-                "type": "number",
-                "example": 19.5
-              },
-              "currentValue": {
-                "type": "number",
-                "example": 18.2
-              },
-              "unit": {
-                "type": "string",
-                "example": "%"
-              },
-              "workerId": {
-                "type": "string",
-                "example": "W1001"
-              },
-              "bioStatus": {
-                "type": "boolean"
-              },
-              "sosFlag": {
-                "type": "boolean"
-              },
-              "spaceName": {
-                "type": "string",
-                "example": "Tank B2"
               }
-            }
-          }
-        }
-      },
-      "ConfinedSpaceAlertProperties": {
-        "type": "object",
-        "required": ["alertId", "alertType", "alertLevel", "alertStatus", "alertMessage", "alertTime", "alertNum"],
-        "properties": {
-          "alertId": {
-            "type": "string",
-            "example": "CS-ALERT-001"
-          },
-          "alertType": {
-            "type": "string",
-            "enum": ["humidity-alert", "temperature-alert", "o2-alert", "co-alert", "co2-alert", "h2s-alert", "ch4-alert", "lel", "others"],
-            "example": "o2-alert"
-          },
-          "alertLevel": {
-            "type": "integer",
-            "enum": [0, 1, 2],
-            "example": 2,
-            "description": "0-Notification, 1-Warning, 2-Critical[file:1]"
-          },
-          "alertStatus": {
-            "type": "integer",
-            "enum": [0,1,2,3,4,5,6,7],
-            "example": 0,
-            "description": "0-Unprocessed...7-Cancelled[file:1]"
-          },
-          "alertMessage": {
-            "type": "object",
-            "properties": {
-              "zh-CN": {"type": "string"},
-              "zh-HK": {"type": "string"},
-              "en-HK": {"type": "string", "example": "Oxygen level critically low (18.2%)"}
-            }
-          },
-          "alertTime": {
-            "type": "string",
-            "format": "date-time",
-            "example": "2025-01-06T14:40:16+08:00"
-          },
-          "alertNum": {
-            "type": "number",
-            "example": 18.2,
-            "description": "Alert severity value (measured level)[file:1]"
-          }
-        }
-      },
-      "ConfinedSpaceMediaRequest": {
-        "type": "array",
-        "items": {
-          "type": "object",
-          "required": ["category4S", "siteId", "supplierId", "alertId", "pushAt", "videoUrl"],
-          "properties": {
-            "category4S": {"type": "string", "const": "confined-space"},
-            "siteId": {"type": "string"},
-            "cicSiteId": {"type": "integer"},
-            "supplierId": {"type": "string"},
-            "alertId": {"type": "string"},
-            "pushAt": {"type": "string", "format": "date-time"},
-            "videoUrl": {
-              "type": "string",
-              "format": "uri",
-              "pattern": ".*\\.(mp4|avi|wmv|rmvb)$"
-            }
-          }
-        }
-      },
-      "ApiResponse": {
-        "type": "object",
-        "properties": {
-          "code": {"type": "integer", "example": 10000},
-          "msg": {"type": "string", "example": "success"},
-          "data": {"type": "null"}
-        }
-      },
-      "AlertListResponse": {
-        "type": "object",
-        "properties": {
-          "code": {"type": "integer", "example": 10000},
-          "msg": {"type": "string", "example": "success"},
-          "data": {
-            "type": "object",
-            "properties": {
-              "list": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/ConfinedSpaceAlert"
-                }
-              },
-              "totalCount": {"type": "integer", "example": 110},
-              "pageNum": {"type": "integer"},
-              "pageSize": {"type": "integer"}
-            }
-          }
-        }
-      }
-    },
-    "parameters": {
-      "siteId": {
-        "name": "siteId",
-        "in": "query",
-        "required": true,
-        "schema": {"type": "string"}
-      },
-      "supplierId": {
-        "name": "supplierId",
-        "in": "query",
-        "required": true,
-        "schema": {"type": "string"}
-      },
-      "startTime": {
-        "name": "startTime",
-        "in": "query",
-        "schema": {"type": "string", "format": "date-time"}
-      },
-      "endTime": {
-        "name": "endTime",
-        "in": "query",
-        "schema": {"type": "string", "format": "date-time"}
-      },
-      "pageNum": {
-        "name": "pageNum",
-        "in": "query",
-        "schema": {"type": "integer", "default": 1}
-      },
-      "pageSize": {
-        "name": "pageSize",
-        "in": "query",
-        "schema": {"type": "integer", "default": 10}
-      }
-    },
-    "responses": {
-      "Success": {
-        "description": "Success",
-        "content": {
-          "application/json": {
-            "schema": {
-              "$ref": "#/components/schemas/ApiResponse"
             }
           }
         }

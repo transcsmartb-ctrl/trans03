@@ -1,0 +1,340 @@
+openapi: 3.1.0
+info:
+  title: 4S Safety Systems OpenAPI
+  description: |-
+    Comprehensive OpenAPI specification for the 4S Schema Registry, covering normative registries,
+    base models, and category-specific schemas for alerts, devices, measurements, and software
+    across safety domains like MEWP, tower cranes, confined spaces, and e-permits.
+    
+    This powers validation, documentation, and client generation for the entire ecosystem.
+  version: current
+  termsOfService: './docs/implementation-guide.md'
+  contact:
+    name: 4S Registry Team
+    url: './index.html'
+  license:
+    name: Apache 2.0
+    url: 'https://www.apache.org/licenses/LICENSE-2.0'
+servers:
+  - url: '{protocol}://{host}/schemas'
+    description: Production schema registry server
+    variables:
+      protocol: { enum: ['http', 'https'], default: 'https' }
+      host: { default: 'registry.4s-safety.com' }
+  - url: 'http://localhost:8080/schemas'
+    description: Local development server
+tags:
+  - name: normative
+    description: Standardized codes, categories, device types, errors, measurements
+  - name: alert
+    description: Alert schemas with 12 category specializations
+  - name: device
+    description: Device schemas with 10 category specializations
+  - name: measurement
+    description: Measurement schemas with 10 category specializations  
+  - name: software
+    description: Software schemas with 4 category specializations
+  - name: basic-info
+    description: Organizational and zone information schemas
+  - name: category
+    description: Top-level 4S category schema
+paths:
+  /registry/current/normative/alert-types:
+    get:
+      tags: [normative]
+      summary: Alert Type Codes
+      description: Normative registry of standardized alert types
+      responses:
+        '200':
+          description: Alert types array/object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertTypes'
+  /registry/current/normative/categories:
+    get:
+      tags: [normative]
+      summary: Category Registry  
+      description: Master normative category definitions
+      responses:
+        '200':
+          description: Categories registry
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Categories'
+  /registry/current/normative/device-types:
+    get:
+      tags: [normative]
+      summary: Device Types
+      responses:
+        '200':
+          description: Device types registry
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceTypes'
+  /registry/current/normative/errors:
+    get:
+      tags: [normative]
+      summary: Error Codes
+      responses:
+        '200':
+          description: Standardized error codes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+  /registry/current/normative/measurement-types:
+    get:
+      tags: [normative]
+      summary: Measurement Types
+      responses:
+        '200':
+          description: Measurement types registry
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MeasurementTypes'
+  /registry/current/schemas/category4s:
+    get:
+      tags: [category]
+      summary: 4S Category Schema
+      description: Top-level category validation schema
+      responses:
+        '200':
+          description: JSON Schema
+          content:
+            application/schema+json:
+              schema:
+                $ref: '#/components/schemas/Category4S'
+  /registry/current/schemas/alert/base:
+    get:
+      tags: [alert]
+      summary: Alert Base Schema
+      responses:
+        '200':
+          description: Base alert model
+          content:
+            application/schema+json:
+              schema:
+                $ref: '#/components/schemas/AlertBase'
+  /registry/current/schemas/alert/categories/{alertCategory}:
+    get:
+      tags: [alert]
+      summary: Alert Category Schema
+      parameters:
+        - name: alertCategory
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/AlertCategoryEnum'
+      responses:
+        '200':
+          description: Specialized alert schema
+          content:
+            application/schema+json:
+              schema:
+                $ref: '#/components/schemas/AlertCategorySchema'
+  /registry/current/schemas/device/base:
+    get:
+      tags: [device]
+      summary: Device Base Schema
+      responses:
+        '200':
+          content:
+            application/schema+json:
+              schema:
+                $ref: '#/components/schemas/DeviceBase'
+  /registry/current/schemas/device/categories/{deviceCategory}:
+    get:
+      tags: [device]
+      summary: Device Category Schema
+      parameters:
+        - name: deviceCategory
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/DeviceCategoryEnum'
+      responses:
+        '200':
+          content:
+            application/schema+json:
+              schema:
+                $ref: '#/components/schemas/DeviceCategorySchema'
+  /registry/current/schemas/measurement/base:
+    get:
+      tags: [measurement]
+      summary: Measurement Base Schema
+      responses:
+        '200':
+          content:
+            application/schema+json:
+              schema:
+                $ref: '#/components/schemas/MeasurementBase'
+  /registry/current/schemas/measurement/categories/{measurementCategory}:
+    get:
+      tags: [measurement]
+      summary: Measurement Category Schema
+      parameters:
+        - name: measurementCategory
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/MeasurementCategoryEnum'
+      responses:
+        '200':
+          content:
+            application/schema+json:
+              schema:
+                $ref: '#/components/schemas/MeasurementCategorySchema'
+  /registry/current/schemas/software/base:
+    get:
+      tags: [software]
+      summary: Software Base Schema
+      responses:
+        '200':
+          content:
+            application/schema+json:
+              schema:
+                $ref: '#/components/schemas/SoftwareBase'
+  /registry/current/schemas/software/categories/{softwareCategory}:
+    get:
+      tags: [software]
+      summary: Software Category Schema
+      parameters:
+        - name: softwareCategory
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/SoftwareCategoryEnum'
+      responses:
+        '200':
+          content:
+            application/schema+json:
+              schema:
+                $ref: '#/components/schemas/SoftwareCategorySchema'
+  /registry/current/schemas/basic-info/orgInfo:
+    get:
+      tags: [basic-info]
+      summary: Organization Info Schema
+      responses:
+        '200':
+          content:
+            application/schema+json:
+              schema:
+                $ref: '#/components/schemas/OrgInfo'
+  /registry/current/schemas/basic-info/zoneInfo:
+    get:
+      tags: [basic-info]
+      summary: Zone Info Schema
+      responses:
+        '200':
+          content:
+            application/schema+json:
+              schema:
+                $ref: '#/components/schemas/ZoneInfo'
+components:
+  schemas:
+    AlertTypes:
+      type: array
+      items:
+        type: object
+        properties:
+          code: { type: string }
+          description: { type: string }
+    Categories:
+      type: object
+      additionalProperties: { type: string }
+    DeviceTypes:
+      type: array
+      items:
+        type: object
+        properties:
+          id: { type: string }
+          name: { type: string }
+    Errors:
+      type: object
+      patternProperties:
+        '^[A-Z_]+$': { type: string }
+    MeasurementTypes:
+      type: array
+      items:
+        type: object
+        properties:
+          unit: { type: string }
+          type: { type: string }
+    Category4S:
+      type: object
+      properties:
+        categoryId: { type: string }
+        name: { type: string }
+        description: { type: string }
+    AlertBase:
+      type: object
+      properties:
+        timestamp: { type: string, format: date-time }
+        severity: { type: string, enum: [low, medium, high, critical] }
+        category: { type: string }
+    AlertCategoryEnum:
+      type: string
+      enum:
+        - ai-monitoring
+        - confined-space
+        - digitalised-tracking-system
+        - e-permit
+        - lock-key
+        - mewp
+        - mobile-plant-operation
+        - others
+        - scaffold-coupler
+        - smart-monitoring-device
+        - tower-crane
+    DeviceCategoryEnum:
+      type: string
+      enum:
+        - ai-monitoring
+        - confined-space
+        - lock-key
+        - mewp
+        - mobile-plant-operation
+        - others
+        - scaffold-coupler
+        - smart-monitoring-device
+        - tower-crane
+    MeasurementCategoryEnum:
+      type: string
+      enum:
+        - ai-monitoring
+        - confined-space
+        - lock-key
+        - mewp
+        - mobile-plant-operation
+        - others
+        - scaffold-coupler
+        - smart-monitoring-device
+        - tower-crane
+    SoftwareCategoryEnum:
+      type: string
+      enum:
+        - digitalised-tracking-system
+        - e-permit
+        - others
+        - vr-training
+    OrgInfo:
+      type: object
+      properties:
+        orgId: { type: string }
+        name: { type: string }
+        address: { type: string }
+    ZoneInfo:
+      type: object
+      properties:
+        zoneId: { type: string }
+        coordinates: { type: array, items: { type: number } }
+        boundaries: { type: object }
+  parameters: {}
+security: []
+externalDocs:
+  description: Migration Guide | Implementation Guide
+  url: './docs/'

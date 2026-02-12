@@ -1,4 +1,179 @@
-{
-  "latest": "/registry/v1",
-  "versions": ["v1"]
-}
+openapi: 3.1.0
+info:
+  title: 4S Schema Registry API
+  description: |-
+    Schema Registry for 4S safety systems providing normative registries and schemas for alerts,
+    devices, measurements, software, and basic info. Serves as central discovery for current version.
+  version: current
+  contact:
+    name: Schema Registry Team
+    url: './index.html'
+servers:
+  - url: '{scheme}://{host}/schemas'
+    description: Base URL for schema registry
+    variables:
+      scheme:
+        enum: [http, https]
+        default: https
+      host:
+        default: your-domain.com
+paths:
+  /.well-known/schema-registry.json:
+    get:
+      summary: Schema Registry Discovery
+      description: Master discovery document pointing to catalogue and indexing all schemas/normative files
+      responses:
+        '200':
+          description: Registry catalog with hierarchical schema paths
+          content:
+            application/json:
+              schema:
+                $ref: './registry/current/catalogue.json'
+  /.well-known/4s-openapi.json:
+    get:
+      summary: 4S OpenAPI Specification
+      description: Convenience pointer to full 4S OpenAPI spec
+      responses:
+        '200':
+          description: OpenAPI 3.x document
+          content:
+            application/json:
+              schema:
+                $ref: './registry/current/4s-openapi.json'
+  /registry/current/catalogue.json:
+    get:
+      summary: Master Schema Catalogue
+      description: Complete catalog for current registry version
+      responses:
+        '200':
+          description: Master catalog listing all schemas and normative registries
+  /registry/current/normative/{file}:
+    get:
+      summary: Normative Registries
+      description: Standardized codes and types
+      parameters:
+        - name: file
+          in: path
+          required: true
+          schema:
+            enum:
+              - alert-types.json
+              - categories.json
+              - device-types.json
+              - errors.json
+              - measurement-types.json
+      responses:
+        '200':
+          description: Normative JSON registry
+          content:
+            application/json:
+              schema:
+                $ref: './registry/current/normative/{file}'
+  /registry/current/schemas/{category}/{sub}/{schema}:
+    get:
+      summary: Category Schemas
+      description: Domain-specific JSON Schemas organized by category, base models, and sub-categories
+      parameters:
+        - name: category
+          in: path
+          required: true
+          schema:
+            enum: [alert, device, measurement, software, basic-info, category4s.schema.json]
+        - name: sub
+          in: path
+          required: true
+          schema:
+            enum: [base.schema.json, categories]
+        - name: schema
+          in: path
+          required: true
+          schema:
+            enum:
+              # Alert categories (12)
+              - ai-monitoring.schema.json
+              - confined-space.schema.json
+              - digitalised-tracking-system.schema.json
+              - e-permit.schema.json
+              - lock-key.schema.json
+              - mewp.schema.json
+              - mobile-plant-operation.schema.json
+              - others.schema.json
+              - scaffold-coupler.schema.json
+              - smart-monitoring-device.schema.json
+              - tower-crane.schema.json
+              # Device/Measurement shared (10)
+              # Software unique (4)
+              - vr-training.schema.json
+              # Basic-info specific (2)
+              - orgInfo.schema.json
+              - zoneInfo.schema.json
+      responses:
+        '200':
+          description: JSON Schema document
+          content:
+            application/schema+json:
+              schema:
+                $ref: './registry/current/schemas/{category}/{sub}/{schema}'
+components:
+  schemas:
+    RegistryDiscovery:
+      type: object
+      properties:
+        version:
+          type: string
+          enum: [current, 2025.01]
+        catalogPath:
+          type: string
+          example: './registry/current/catalogue.json'
+        schemas:
+          type: object
+          properties:
+            alert:
+              type: object
+              properties:
+                base: { type: string }
+                categories: { type: array, items: { type: string } }
+            device:
+              type: object
+              properties:
+                base: { type: string }
+                categories: { type: array, items: { type: string } }
+            measurement:
+              type: object
+              properties:
+                base: { type: string }
+                categories: { type: array, items: { type: string } }
+            software:
+              type: object
+              properties:
+                base: { type: string }
+                categories: { type: array, items: { type: string } }
+            basic_info:
+              type: array
+              items: { type: string }
+            category:
+              type: array
+              items: { type: string }
+      required: [version, catalogPath, schemas]
+  parameters:
+    CategoryParam:
+      name: category
+      in: path
+      required: true
+      schema: { $ref: '#/components/schemas/CategoryEnum' }
+    FileParam:
+      name: file
+      in: path
+      required: true
+      schema: { $ref: '#/components/schemas/NormativeFileEnum' }
+tags:
+  - name: Discovery
+    description: Registry metadata and catalogues
+  - name: Normative
+    description: Standardized codes and registries
+  - name: Schemas
+    description: Domain JSON Schemas by category
+externalDocs:
+  description: Implementation Guide
+  url: './docs/implementation-guide.md'
+security: []

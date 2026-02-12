@@ -1,398 +1,213 @@
-{
-  "openapi": "3.0.3",
-  "info": {
-    "title": "CIC SSSS Software APIs - Digitalised Tracking System",
-    "description": "APIs for adding/updating/querying digitalised-tracking-system software data (tools/ladders/plants tracking). From CIC SSSS API Framework v0.16 (Software-001/002/004). See Appendix C.[file:1]",
-    "version": "1.0.0",
-    "contact": {
-      "name": "CIC SSSS"
-    }
-  },
-  "servers": [
-    {
-      "url": "https://api.example.com/v1"
-    }
-  ],
-  "tags": [
-    {
-      "name": "Software",
-      "description": "Software data management (e-permits, tracking systems, VR training).[file:1]"
-    }
-  ],
-  "paths": {
-    "/software": {
-      "post": {
-        "tags": ["Software"],
-        "summary": "Software-001 Add software related data (CMP-hosted)",
-        "description": "Add new digitalised-tracking-system record.[file:1]",
-        "operationId": "addDigitalisedTracking",
-        "security": [{"bearerAuth": []}],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/DigitalisedTrackingSystem"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/BadRequest"
-          }
-        }
-      },
-      "patch": {
-        "tags": ["Software"],
-        "summary": "Software-002 Update software related data",
-        "description": "Partial update for digitalised-tracking-system.[file:1]",
-        "operationId": "updateDigitalisedTracking",
-        "security": [{"bearerAuth": []}],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/DigitalisedTrackingUpdate"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "$ref": "#/components/responses/Success"
-          }
-        }
-      },
-      "delete": {
-        "tags": ["Software"],
-        "summary": "Software-003 Delete software related data",
-        "description": "Delete by trackingId and siteId.[file:1]",
-        "operationId": "deleteDigitalisedTracking",
-        "security": [{"bearerAuth": []}],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SoftwareDeleteRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "$ref": "#/components/responses/Success"
-          }
-        }
-      },
-      "get": {
-        "tags": ["Software"],
-        "summary": "Software-004 Query software related data (Solution Vendor-hosted)",
-        "description": "List digitalised-tracking-system records with pagination.[file:1]",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/category4S"
-          },
-          {
-            "$ref": "#/components/parameters/siteId"
-          },
-          {
-            "$ref": "#/components/parameters/supplierId"
-          },
-          {
-            "$ref": "#/components/parameters/pageNum"
-          },
-          {
-            "$ref": "#/components/parameters/pageSize"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SoftwareListResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  },
-  "components": {
-    "securitySchemes": {
-      "bearerAuth": {
-        "type": "http",
-        "scheme": "bearer",
-        "bearerFormat": "JWT"
-      }
-    },
-    "schemas": {
-      "DigitalisedTrackingSystem": {
-        "type": "object",
-        "required": ["category4S", "siteId", "supplierId", "digitalisedTrackingProperties"],
-        "properties": {
-          "category4S": {
-            "type": "string",
-            "enum": ["digitalised-tracking-system"],
-            "example": "digitalised-tracking-system",
-            "description": "Fixed 4S category.[file:1]"
-          },
-          "siteId": {
-            "type": "string",
-            "example": "1693279120646",
-            "description": "Vendor-defined site key.[file:1]"
-          },
-          "cicSiteId": {
-            "type": "integer",
-            "example": 438493849,
-            "description": "CIC-standard site ID (optional).[file:1]"
-          },
-          "supplierId": {
-            "type": "string",
-            "example": "438",
-            "description": "Software supplier ID.[file:1]"
-          },
-          "pushAt": {
-            "type": "string",
-            "format": "date-time",
-            "example": "2025-01-06T14:40:16+08:00",
-            "description": "Record update timestamp.[file:1]"
-          },
-          "digitalisedTrackingProperties": {
-            "type": "object",
-            "required": ["trackingId", "itemName", "itemType", "serialNumber", "nextInspectionDate"],
-            "properties": {
-              "trackingId": {
-                "type": "string",
-                "example": "TRACK-001",
-                "description": "Unique tracking system ID.[file:1]"
-              },
-              "itemName": {
-                "type": "string",
-                "example": "Ladder ABC123",
-                "description": "Name of tracked item (tool/plant/ladder).[file:1]"
-              },
-              "itemType": {
-                "type": "string",
-                "enum": ["ladder", "powered-tool", "site-plant"],
-                "example": "ladder",
-                "description": "Type: ladder, powered-tool, site-plant.[file:1]"
-              },
-              "serialNumber": {
-                "type": "string",
-                "example": "LAD-456789",
-                "description": "Item serial number.[file:1]"
-              },
-              "nextInspectionDate": {
-                "type": "string",
-                "format": "date-time",
-                "example": "2025-02-15T00:00:00+08:00",
-                "description": "Next scheduled examination/inspection date.[file:1]"
-              },
-              "lastInspectionDate": {
-                "type": "string",
-                "format": "date-time",
-                "example": "2025-01-15T00:00:00+08:00"
-              },
-              "status": {
-                "type": "string",
-                "enum": ["active", "overdue", "expired", "retired"],
-                "example": "active"
-              },
-              "location": {
-                "type": "string",
-                "example": "Site B1 Storage"
-              }
-            }
-          }
-        },
-        "description": "Digitalised tracking for site plants, powered tools, ladders with inspection scheduling.[file:1]"
-      },
-      "DigitalisedTrackingUpdate": {
-        "type": "object",
-        "required": ["trackingId"],
-        "properties": {
-          "trackingId": {
-            "type": "string",
-            "example": "TRACK-001",
-            "description": "Tracking ID to update.[file:1]"
-          },
-          "digitalisedTrackingProperties": {
-            "$ref": "#/components/schemas/DigitalisedTrackingSystem/properties/digitalisedTrackingProperties"
-          }
-        },
-        "description": "Update request with trackingId.[file:1]"
-      },
-      "SoftwareDeleteRequest": {
-        "type": "object",
-        "required": ["trackingId", "siteId"],
-        "properties": {
-          "trackingId": {
-            "type": "string",
-            "example": "TRACK-001"
-          },
-          "siteId": {
-            "type": "string",
-            "example": "1693279120646"
-          }
-        },
-        "description": "Delete request by trackingId and siteId.[file:1]"
-      },
-      "ApiResponse": {
-        "type": "object",
-        "properties": {
-          "code": {
-            "type": "integer",
-            "example": 10000
-          },
-          "msg": {
-            "type": "string",
-            "example": "success"
-          },
-          "data": {
-            "$ref": "#/components/schemas/DigitalisedTrackingSystem"
-          }
-        }
-      },
-      "SoftwareListResponse": {
-        "type": "object",
-        "properties": {
-          "code": {
-            "type": "integer",
-            "example": 10000
-          },
-          "msg": {
-            "type": "string",
-            "example": "success"
-          },
-          "data": {
-            "type": "object",
-            "properties": {
-              "list": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/DigitalisedTrackingSystem"
-                }
-              },
-              "totalCount": {
-                "type": "integer",
-                "example": 100
-              },
-              "pageSize": {
-                "type": "integer",
-                "example": 10
-              },
-              "pageNum": {
-                "type": "integer",
-                "example": 1
-              }
-            }
-          }
-        }
-      }
-    },
-    "parameters": {
-      "category4S": {
-        "name": "category4S",
-        "in": "query",
-        "required": true,
-        "schema": {
-          "type": "string",
-          "enum": ["digitalised-tracking-system"]
-        },
-        "example": "digitalised-tracking-system"
-      },
-      "siteId": {
-        "name": "siteId",
-        "in": "query",
-        "required": true,
-        "schema": {
-          "type": "string"
-        },
-        "example": "1693279120646"
-      },
-      "supplierId": {
-        "name": "supplierId",
-        "in": "query",
-        "schema": {
-          "type": "string"
-        },
-        "example": "438"
-      },
-      "pageNum": {
-        "name": "pageNum",
-        "in": "query",
-        "schema": {
-          "type": "integer",
-          "default": 1
-        }
-      },
-      "pageSize": {
-        "name": "pageSize",
-        "in": "query",
-        "schema": {
-          "type": "integer",
-          "default": 10,
-          "maximum": 200
-        }
-      }
-    },
-    "responses": {
-      "Success": {
-        "description": "Success",
-        "content": {
-          "application/json": {
-            "schema": {
-              "type": "object",
-              "properties": {
-                "code": {
-                  "type": "integer",
-                  "example": 10000
-                },
-                "msg": {
-                  "type": "string",
-                  "example": "success"
-                }
-              }
-            }
-          }
-        }
-      },
-      "BadRequest": {
-        "description": "Bad Request",
-        "content": {
-          "application/json": {
-            "schema": {
-              "type": "object",
-              "properties": {
-                "code": {
-                  "type": "integer",
-                  "example": 10002
-                },
-                "msg": {
-                  "type": "string",
-                  "example": "missing parameters: siteId"
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-}
+openapi: 3.0.3
+info:
+  title: Digitalised Tracking System Schema (4S API)
+  version: 1.0.0
+  description: Schema for software category 'digitalised-tracking-system' used in device registration (Software-001/002), tracking site plants, powered tools, and ladders.[file:1]
+servers:
+  - url: https://example-domain/api/v1
+paths:
+  /software:
+    post:
+      summary: Add Digitalised Tracking System software (Software-001)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DigitalisedTrackingSystem'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 10000
+                  msg:
+                    type: string
+                    example: success[file:1]
+    patch:
+      summary: Update Digitalised Tracking System software (Software-002)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DigitalisedTrackingSystem'
+      responses:
+        '200':
+          description: Success[file:1]
+    delete:
+      summary: Delete Digitalised Tracking System software (Software-003)
+      parameters:
+        - name: deviceSn
+          in: query
+          schema:
+            type: string
+          required: true
+        - name: siteId
+          in: query
+          schema:
+            type: string
+          required: true[file:1]
+      responses:
+        '200':
+          description: Success
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    DigitalisedTrackingSystem:
+      type: object
+      required:
+        - category4S
+        - siteId
+        - supplierId
+      properties:
+        category4S:
+          type: string
+          enum: [digitalised-tracking-system]
+          example: digitalised-tracking-system[file:1]
+        siteId:
+          type: string
+          description: Unique site ID defined by solution vendor.
+          example: 1693279120646[file:1]
+        cicSiteId:
+          type: integer
+          description: CIC-standard site ID (recommended).
+          example: 4338493849[file:1]
+        supplierId:
+          type: string
+          description: Unique supplier ID.
+          example: 438[file:1]
+        pushAt:
+          type: string
+          format: date-time
+          description: Data push time (ISO 8601).
+          example: 2025-05-16T090001+0800[file:1]
+        plantToolProperties:
+          type: object
+          description: Properties for tracked plant/tool/ladders.
+          properties:
+            deviceSn:
+              type: string
+              description: Serial number.
+              example: 9125-0007[file:1]
+            deviceStatus:
+              type: integer
+              description: Status (e.g., 1=active).
+              example: 1[file:1]
+            machineId:
+              type: string
+              description: Machine ID.
+              example: 139209320[file:1]
+            machineType:
+              type: integer
+              description: Machine type code.
+              example: 145[file:1]
+            type:
+              type: integer
+              description: Equipment type code.
+              example: 1[file:1]
+            operators:
+              type: string
+              description: Comma-separated operators.
+              example: zhangsan,lisi[file:1]
+            entryDate:
+              type: string
+              format: date
+              description: Entry date.
+              example: 2025-05-16[file:1]
+            departureDate:
+              type: string
+              format: date
+              description: Departure date.
+              example: 2026-05-16[file:1]
+            checkStatus:
+              type: integer
+              description: 0=Pending, 1=Passed, 2=Failed.
+              example: 1[file:1]
+            imageUrl:
+              type: string
+              format: uri
+              description: Image URL (jpeg).
+              example: https://xxxx.jpeg[file:1]
+            model:
+              type: string
+              example: DGA402[file:1]
+            safeLoad:
+              type: string
+              example: 27.82T[file:1]
+            brand:
+              type: string
+              example: Makita[file:1]
+            voltage:
+              type: integer
+              description: 1=110V, 2=220V, 3=380V.
+              example: 2[file:1]
+            manufacturer:
+              type: string
+              example: test manufacturer[file:1]
+            manufactureDate:
+              type: string
+              format: date
+              example: 2025-04-08[file:1]
+            certificateNumber:
+              type: string
+              example: c0001[file:1]
+            certificateStartDate:
+              type: string
+              format: date
+              example: 2025-10-08[file:1]
+            certificateEndDate:
+              type: string
+              format: date
+              example: 2026-10-08[file:1]
+            certificateStatus:
+              type: integer
+              example: 0[file:1]
+            inspectorId:
+              type: integer
+              example: 4839480343[file:1]
+            inspectorName:
+              type: string
+              example: kris[file:1]
+            createTime:
+              type: string
+              format: date-time
+              example: 2025-05-16T090001+0800[file:1]
+            creator:
+              type: string
+              example: kris[file:1]
+        additionalProperties:
+          type: object
+          properties:
+            cicSiteId:
+              type: integer
+              example: 4338493849[file:1]
+            qrCode:
+              type: string
+              example: 403483984[file:1]
+            size:
+              type: string
+              example: 10m[file:1]
+            locationDesc:
+              type: string
+              example: The second floor 204[file:1]
+            operationManual:
+              type: string
+              format: uri
+              example: https://xxxx.pdf[file:1]
+            remark:
+              type: string
+              example: 251132VH4578[file:1]

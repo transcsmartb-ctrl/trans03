@@ -1,1 +1,276 @@
 
+openapi: 3.0.3
+info:
+  title: 4S Normative Categories API
+  description: |-
+    REST API for the master category registry defining 12 schema categories across 6 domains 
+    (alert/device/measurement/software/basic-info/category) with domain compatibility, priority,
+    and Appendix H alert type integration.
+  version: current
+  termsOfService: 'https://registry.4s-safety.com/schemas/docs/implementation-guide.md'
+servers:
+  - url: '{protocol}://{host}/registry/current/normative'
+    description: Production normative registry
+    variables:
+      protocol: { enum: [http, https], default: https }
+      host: { default: registry.4s-safety.com }
+tags:
+  - name: categories
+    description: Master category registry (12 categories)
+  - name: compatibility
+    description: Domain/schema compatibility checks
+  - name: priority
+    description: Processing order and requirements
+  - name: stats
+    description: Category coverage statistics
+paths:
+  /categories.json:
+    get:
+      tags: [categories]
+      summary: Complete Category Registry
+      description: All 12 categories with domain mappings
+      parameters:
+        - name: domain
+          in: query
+          schema:
+            $ref: '#/components/schemas/DomainQuery'
+          description: Filter by schema domain
+        - name: required
+          in: query
+          schema:
+            type: boolean
+          description: 4S required categories only
+        - name: priorityLt
+          in: query
+          schema:
+            type: integer
+            maximum: 99
+          description: Categories with priority less than value
+      responses:
+        '200':
+          description: Complete or filtered category registry
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoriesResponse'
+  /categories/{categoryId}:
+    get:
+      tags: [categories]
+      summary: Single Category Details
+      parameters:
+        - name: categoryId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/CategoryId'
+      responses:
+        '200':
+          description: Category metadata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryResponse'
+        '404':
+          description: Category not found
+  /categories/domain/{domain}:
+    get:
+      tags: [compatibility]
+      summary: Domain-Supported Categories
+      parameters:
+        - name: domain
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/DomainParam'
+      responses:
+        '200':
+          description: Categories supported by domain
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainCategories'
+  /categories/priority:
+    get:
+      tags: [priority]
+      summary: Priority Ordered Categories
+      parameters:
+        - name: required
+          in: query
+          schema:
+            type: boolean
+        - name: maxPriority
+          in: query
+          schema:
+            type: integer
+            maximum: 99
+      responses:
+        '200':
+          description: Ordered category list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+  /categories/validate/{categoryId}:
+    get:
+      tags: [priority]
+      summary: Category Compliance Check
+      parameters:
+        - name: categoryId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/CategoryId'
+        - name: domain
+          in: query
+          schema:
+            $ref: '#/components/schemas/DomainQuery'
+      responses:
+        '200':
+          description: Compliance status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationResponse'
+  /categories/stats:
+    get:
+      tags: [stats]
+      summary: Category Coverage Statistics
+      description: Domain coverage and alert type counts
+      responses:
+        '200':
+          description: Registry statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatsResponse'
+components:
+  schemas:
+    Category:
+      type: object
+      required: [id, title, domains, priority, required]
+      properties:
+        id:
+          type: string
+          example: "smart-monitoring-device"
+        title:
+          type: string
+          example: "Smart Monitoring Device"
+        description:
+          type: string
+        domains:
+          type: array
+          items:
+            $ref: '#/components/schemas/DomainEnum'
+          uniqueItems: true
+        priority:
+          type: integer
+          minimum: 0
+          example: 0
+        required:
+          type: boolean
+          example: true
+        alertTypes:
+          type: integer
+          example: 11
+    CategoriesResponse:
+      type: object
+      properties:
+        totalCategories:
+          type: integer
+          example: 12
+        required:
+          type: integer
+          example: 10
+        domains:
+          type: object
+          properties:
+            count: { type: integer }
+            schemaTypes: { type: array, items: { type: string } }
+        categories:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/Category'
+    CategoryResponse:
+      allOf:
+        - $ref: '#/components/schemas/Category'
+        - type: object
+          properties:
+            supportedSchemas:
+              type: array
+              items:
+                type: string
+    DomainCategories:
+      type: object
+      properties:
+        domain:
+          $ref: '#/components/schemas/DomainEnum'
+        supportedCategories:
+          type: array
+          items:
+            $ref: '#/components/schemas/Category'
+        count:
+          type: integer
+    ValidationResponse:
+      type: object
+      properties:
+        valid:
+          type: boolean
+        category:
+          $ref: '#/components/schemas/Category'
+        domainCompatible:
+          type: boolean
+        required4S:
+          type: boolean
+    StatsResponse:
+      type: object
+      properties:
+        totalCategories: { type: integer, example: 12 }
+        requiredCategories: { type: integer, example: 10 }
+        optionalCategories: { type: integer, example: 2 }
+        bySchemaDomain:
+          type: object
+          additionalProperties:
+            type: integer
+        multiDomainCategories: { type: integer, example: 9 }
+        softwareOnlyCategories: { type: integer, example: 3 }
+    CategoryId:
+      type: string
+      enum:
+        - ai-monitoring
+        - confined-space
+        - digitalised-tracking-system
+        - e-permit
+        - lock-key
+        - mewp
+        - mobile-plant-operation
+        - others
+        - scaffold-coupler
+        - smart-monitoring-device
+        - tower-crane
+        - vr-training
+      example: "smart-monitoring-device"
+    DomainEnum:
+      type: string
+      enum:
+        - alert
+        - device
+        - measurement
+        - software
+        - basic-info
+        - category
+      example: "alert"
+    DomainParam:
+      allOf:
+        - $ref: '#/components/schemas/DomainEnum'
+        - type: string
+          nullable: false
+    DomainQuery:
+      allOf:
+        - $ref: '#/components/schemas/DomainEnum'
+        - nullable: true
+security: []
+externalDocs:
+  description: Appendix H Alert Types Integration
+  url: '/alert-types.json'

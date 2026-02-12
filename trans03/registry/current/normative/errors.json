@@ -1,1 +1,285 @@
 
+openapi: 3.0.3
+info:
+  title: 4S Normative Error Codes API (Appendix J)
+  description: |-
+    REST API for Appendix J HTTP status codes. Lookup, categorize, validate, and get remediation
+    guidance for all 8 standardized codes (200-500) with method applicability and compliance rules.
+  version: current
+  termsOfService: 'https://registry.4s-safety.com/schemas/docs/implementation-guide.md#appendix-j'
+servers:
+  - url: '{protocol}://{host}/registry/current/normative'
+    description: Production normative registry
+    variables:
+      protocol: { enum: [http, https], default: https }
+      host: { default: registry.4s-safety.com }
+tags:
+  - name: errors
+    description: Appendix J - 8 standardized HTTP status codes
+  - name: lookup
+    description: Error code search and categorization
+  - name: remediation
+    description: Client remediation guidance
+  - name: compliance
+    description: Schema validation and response rules
+paths:
+  /errors.json:
+    get:
+      tags: [errors]
+      summary: Complete Error Codes Registry
+      description: All 8 Appendix J codes with metadata
+      parameters:
+        - name: category
+          in: query
+          schema:
+            $ref: '#/components/schemas/ErrorCategory'
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/StatusQuery'
+        - name: retryable
+          in: query
+          schema:
+            type: boolean
+        - name: schemaBreaking
+          in: query
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Complete or filtered error registry
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorsResponse'
+  /errors/{statusCode}:
+    get:
+      tags: [errors]
+      summary: Single Error Code Details
+      parameters:
+        - name: statusCode
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/StatusCode'
+      responses:
+        '200':
+          description: Error code details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Status code not found
+  /errors/by-method/{httpMethod}:
+    get:
+      tags: [lookup]
+      summary: Errors by HTTP Method
+      parameters:
+        - name: httpMethod
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/HttpMethod'
+      responses:
+        '200':
+          description: Applicable errors for method
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MethodErrors'
+  /errors/remediate/{statusCode}:
+    get:
+      tags: [remediation]
+      summary: Remediation Guidance
+      parameters:
+        - name: statusCode
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/StatusCode'
+      responses:
+        '200':
+          description: Client remediation steps
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RemediationResponse'
+  /errors/validate:
+    post:
+      tags: [compliance]
+      summary: Validate Error Response
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ErrorValidationRequest'
+      responses:
+        '200':
+          description: Validation result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationResponse'
+  /errors/stats:
+    get:
+      tags: [compliance]
+      summary: Error Statistics
+      description: Usage patterns and compliance metrics
+      responses:
+        '200':
+          description: Error registry statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatsResponse'
+components:
+  schemas:
+    ErrorCode:
+      type: object
+      required: [status, message, category, schemaCompliance]
+      properties:
+        status:
+          $ref: '#/components/schemas/StatusCode'
+        message:
+          type: string
+          example: "Bad Request"
+        description:
+          type: string
+        category:
+          $ref: '#/components/schemas/ErrorCategory'
+        subcategories:
+          type: array
+          items:
+            type: string
+        httpMethod:
+          type: array
+          items:
+            $ref: '#/components/schemas/HttpMethod'
+        schemaCompliance:
+          type: boolean
+        remediation:
+          type: string
+    ErrorsResponse:
+      type: object
+      properties:
+        totalCodes:
+          type: integer
+          example: 8
+        codes:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/ErrorCode'
+        index:
+          $ref: '#/components/schemas/ErrorIndex'
+    ErrorResponse:
+      allOf:
+        - $ref: '#/components/schemas/ErrorCode'
+        - type: object
+          properties:
+            supportedMethods:
+              type: array
+              items:
+                $ref: '#/components/schemas/HttpMethod'
+    MethodErrors:
+      type: object
+      properties:
+        httpMethod:
+          $ref: '#/components/schemas/HttpMethod'
+        applicableErrors:
+          type: array
+          items:
+            $ref: '#/components/schemas/ErrorCode'
+        count:
+          type: integer
+    RemediationResponse:
+      type: object
+      properties:
+        statusCode:
+          $ref: '#/components/schemas/StatusCode'
+        error:
+          $ref: '#/components/schemas/ErrorCode'
+        steps:
+          type: array
+          items:
+            type: string
+        retryable:
+          type: boolean
+    ErrorValidationRequest:
+      type: object
+      required: [status, responseBody]
+      properties:
+        status:
+          $ref: '#/components/schemas/StatusCode'
+        responseBody:
+          type: object
+        headers:
+          type: object
+    ValidationResponse:
+      type: object
+      properties:
+        valid:
+          type: boolean
+        compliant:
+          type: boolean
+        issues:
+          type: array
+          items:
+            type: string
+    StatsResponse:
+      type: object
+      properties:
+        totalCodes: { type: integer, example: 8 }
+        byCategory:
+          type: object
+          additionalProperties:
+            type: integer
+        schemaBreaking: { type: integer, example: 3 }
+        retryable: { type: integer, example: 2 }
+        clientErrors: { type: integer, example: 4 }
+        serverErrors: { type: integer, example: 1 }
+    StatusCode:
+      type: integer
+      enum: [200, 400, 401, 403, 404, 413, 429, 500]
+      x-examples:
+        success: 200
+        badRequest: 400
+        unauthorized: 401
+    ErrorCategory:
+      type: string
+      enum: [success, client, auth, throttle, server]
+    HttpMethod:
+      type: string
+      enum: [GET, POST, PUT, PATCH, DELETE]
+    ErrorIndex:
+      type: object
+      properties:
+        byCategory:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              $ref: '#/components/schemas/StatusCode'
+        byHttpMethod:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              $ref: '#/components/schemas/StatusCode'
+        schemaBreaking:
+          type: array
+          items:
+            $ref: '#/components/schemas/StatusCode'
+        retryable:
+          type: array
+          items:
+            $ref: '#/components/schemas/StatusCode'
+    StatusQuery:
+      allOf:
+        - $ref: '#/components/schemas/StatusCode'
+        - nullable: true
+security: []
+externalDocs:
+  description: Error Response Schema Reference
+  url: '#/components/schemas/ErrorCode'

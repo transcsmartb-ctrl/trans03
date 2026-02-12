@@ -1,7 +1,156 @@
 {
-  "version": "v1",
-  "devices": { "$ref": "./schemas/devices/base.json" },
-  "software": { "$ref": "./schemas/software/base.json" },
-  "measurements": { "$ref": "./schemas/measurements/base.json" },
-  "alerts": { "$ref": "./schemas/alerts/base.json" }
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://registry.4s-safety.com/registry/current/catalogue.json",
+  "title": "4S Schema Registry - Current Version Master Catalogue",
+  "description": "Complete inventory of all normative registries and schemas for the current registry version",
+  "version": "current",
+  "generated": "2026-02-12T16:25:00Z",
+  "totalSchemas": 45,
+  "registryRoot": "./registry/current/",
+  "normativeRegistries": {
+    "count": 5,
+    "files": [
+      {
+        "name": "alert-types.json",
+        "path": "normative/alert-types.json",
+        "description": "Standardized alert type codes",
+        "size": 2847,
+        "sha256": "a1b2c3d4e5f6..."
+      },
+      {
+        "name": "categories.json", 
+        "path": "normative/categories.json",
+        "description": "Master category definitions",
+        "size": 1562,
+        "sha256": "b2c3d4e5f6a1..."
+      },
+      {
+        "name": "device-types.json",
+        "path": "normative/device-types.json", 
+        "description": "Equipment classification codes",
+        "size": 3921,
+        "sha256": "c3d4e5f6a1b2..."
+      },
+      {
+        "name": "errors.json",
+        "path": "normative/errors.json",
+        "description": "Error code registry",
+        "size": 2189,
+        "sha256": "d4e5f6a1b2c3..."
+      },
+      {
+        "name": "measurement-types.json",
+        "path": "normative/measurement-types.json",
+        "description": "Sensor units and types",
+        "size": 3478,
+        "sha256": "e5f6a1b2c3d4..."
+      }
+    ]
+  },
+  "schemas": {
+    "summary": {
+      "total": 45,
+      "byDomain": {
+        "alert": 13,
+        "device": 11,
+        "measurement": 11,
+        "software": 5,
+        "basic-info": 2,
+        "category": 1,
+        "other": 2
+      }
+    },
+    "category4s": [
+      {
+        "name": "category4s.schema.json",
+        "path": "schemas/category4s.schema.json",
+        "type": "category",
+        "description": "Top-level 4S category schema",
+        "size": 1245,
+        "sha256": "f6a1b2c3d4e5..."
+      }
+    ],
+    "alert": {
+      "base": "schemas/alert/base.schema.json",
+      "categories": [
+        "schemas/alert/categories/ai-monitoring.schema.json",
+        "schemas/alert/categories/confined-space.schema.json",
+        "schemas/alert/categories/digitalised-tracking-system.schema.json",
+        "schemas/alert/categories/e-permit.schema.json",
+        "schemas/alert/categories/lock-key.schema.json",
+        "schemas/alert/categories/mewp.schema.json",
+        "schemas/alert/categories/mobile-plant-operation.schema.json",
+        "schemas/alert/categories/others.schema.json",
+        "schemas/alert/categories/scaffold-coupler.schema.json",
+        "schemas/alert/categories/smart-monitoring-device.schema.json",
+        "schemas/alert/categories/tower-crane.schema.json"
+      ]
+    },
+    "device": {
+      "base": "schemas/device/base.schema.json",
+      "categories": [
+        "schemas/device/categories/ai-monitoring.schema.json",
+        "schemas/device/categories/confined-space.schema.json",
+        "schemas/device/categories/lock-key.schema.json",
+        "schemas/device/categories/mewp.schema.json",
+        "schemas/device/categories/mobile-plant-operation.schema.json",
+        "schemas/device/categories/others.schema.json",
+        "schemas/device/categories/scaffold-coupler.schema.json",
+        "schemas/device/categories/smart-monitoring-device.schema.json",
+        "schemas/device/categories/tower-crane.schema.json"
+      ]
+    },
+    "measurement": {
+      "base": "schemas/measurement/base.schema.json",
+      "categories": [
+        "schemas/measurement/categories/ai-monitoring.schema.json",
+        "schemas/measurement/categories/confined-space.schema.json",
+        "schemas/measurement/categories/lock-key.schema.json",
+        "schemas/measurement/categories/mewp.schema.json",
+        "schemas/measurement/categories/mobile-plant-operation.schema.json",
+        "schemas/measurement/categories/others.schema.json",
+        "schemas/measurement/categories/scaffold-coupler.schema.json",
+        "schemas/measurement/categories/smart-monitoring-device.schema.json",
+        "schemas/measurement/categories/tower-crane.schema.json"
+      ]
+    },
+    "basic-info": [
+      {
+        "name": "orgInfo.schema.json",
+        "path": "schemas/basic-info/orgInfo.schema.json",
+        "description": "Organization metadata",
+        "size": 892,
+        "sha256": "a2b3c4d5e6f7..."
+      },
+      {
+        "name": "zoneInfo.schema.json",
+        "path": "schemas/basic-info/zoneInfo.schema.json", 
+        "description": "Zone boundaries and metadata",
+        "size": 1567,
+        "sha256": "b3c4d5e6f7a2..."
+      }
+    ],
+    "software": {
+      "base": "schemas/software/base.schema.json",
+      "categories": [
+        "schemas/software/categories/digitalised-tracking-system.schema.json",
+        "schemas/software/categories/e-permit.schema.json",
+        "schemas/software/categories/others.schema.json",
+        "schemas/software/categories/vr-training.schema.json"
+      ]
+    }
+  },
+  "pathIndex": {
+    "normative": 5,
+    "baseSchemas": 5,
+    "categorySchemas": 38,
+    "total": 48
+  },
+  "previousVersions": ["2025.01"],
+  "openapiSpec": "./.well-known/4s-openapi.json",
+  "discoveryDoc": "./../.well-known/schema-registry.json",
+  "docs": {
+    "implementation": "./../docs/implementation-guide.md",
+    "migration": "./../docs/migration.md"
+  }
 }

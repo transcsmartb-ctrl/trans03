@@ -1,1 +1,31 @@
 
+openapi: 3.0.3
+info:
+  title: 4S Normative Device Types API (Appendix B)
+  description: |-
+    Complete API specification for device registration based on Appendix B IoT Device Field Table.
+    Supports all 10 categories (smart-monitoring-device, tower-crane, etc.) with field validation,
+    examples, key/optional field distinction, and CIC integration.
+  version: current
+  termsOfService: 'https://registry.4s-safety.com/schemas/docs/implementation-guide.md#appendix-b'
+servers:
+  - url: '{protocol}://{host}/registry/current/schemas/device'
+    description: Device registration endpoint
+    variables:
+      protocol: { enum: [http, https], default: https }
+      host: { default: registry.4s-safety.com }
+tags:
+  - name: device-registration
+    description: Appendix B - IoT Device Fields (10 categories)
+  - name: validation
+    description: Device payload validation and schema resolution
+  - name: examples
+    description: Category-specific request examples
+paths:
+  /register:
+    post:
+      tags: [device-registration]
+      summary: Register IoT Device
+      description: Validate and register device per Appendix B field requirements
+      requestBody:
+        required

@@ -1,126 +1,277 @@
 {
   "openapi": "3.0.3",
   "info": {
-    "title": "CIC SSSS Alert Base APIs",
-    "description": "Core Alert Management APIs (Alert-001/002/003/004/005) across all 4S categories. Standardized structure for push/update/query alerts per CIC SSSS framework. See sections 6.2 & Appendix E[file:1].",
-    "version": "1.0.0",
-    "contact": {
-      "name": "CIC SSSS"
-    }
+    "title": "4S Alert Base Schema",
+    "description": "OpenAPI 3.0.3 representation of the 4S Alert Base schema for Swagger UI compatibility, derived from CIC SSSS API Framework Alert-001/002/004 payloads and Appendix E.[file:1]",
+    "version": "current"
   },
   "servers": [
     {
-      "url": "https://api.example.com/v1"
+      "url": "https://your-domain.example.com/api/v1"
     }
   ],
-  "tags": [
-    {
-      "name": "Alert Management",
-      "description": "Universal alert APIs: 001(push), 002(update), 003(media), 004(query), 005(status)[file:1]"
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "OAuth 2.0 Bearer token as per framework section 3.[file:1]"
+      }
+    },
+    "schemas": {
+      "AlertBase": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "category4S",
+          "siteId",
+          "supplierId",
+          "deviceSn",
+          "pushAt",
+          "alertProperties"
+        ],
+        "properties": {
+          "category4S": {
+            "type": "string",
+            "description": "4S category (e.g., smart-monitoring-device, ai-monitoring). See Appendix A.[file:1]",
+            "example": "smart-monitoring-device"
+          },
+          "siteId": {
+            "type": "string",
+            "description": "Vendor-defined site ID.[file:1]",
+            "example": "AAYL001"
+          },
+          "supplierId": {
+            "type": "string",
+            "description": "Device/software supplier ID.[file:1]",
+            "example": "SUP001"
+          },
+          "deviceSn": {
+            "type": "string",
+            "description": "Device serial number.[file:1]",
+            "example": "SN-8655078237"
+          },
+          "pushAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Push timestamp (ISO 8601 with offset, e.g., 2025-01-06T14:40:16+08:00).[file:1]",
+            "example": "2025-01-06T14:40:16+08:00"
+          },
+          "alertProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["alertId", "alertStatus"],
+            "properties": {
+              "alertId": {
+                "type": "string",
+                "description": "Unique alert ID.[file:1]",
+                "example": "alert-001"
+              },
+              "alertType": {
+                "type": "string",
+                "description": "Alert type code (e.g., low-battery). See Appendix H.[file:1]",
+                "example": "low-battery"
+              },
+              "alertLevel": {
+                "type": "integer",
+                "enum": [0, 1, 2],
+                "description": "0=Notification, 1=Warning, 2=Critical.[file:1]",
+                "example": 1
+              },
+              "alertStatus": {
+                "type": "integer",
+                "enum": [0, 1, 2, 3, 4, 5, 6, 7],
+                "description": "0=Unprocessed, ..., 7=Cancelled.[file:1]",
+                "example": 0
+              },
+              "alertMessage": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "properties": {
+                  "en-HK": {"type": "string", "example": "Low battery"},
+                  "zh-HK": {"type": "string", "example": "低電量"},
+                  "zh-CN": {"type": "string", "example": "低电量"}
+                },
+                "description": "Multilingual messages (BCP 47 keys).[file:1]"
+              },
+              "alertTime": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Trigger timestamp.[file:1]",
+                "example": "2025-01-06T14:40:16+08:00"
+              },
+              "alertNum": {
+                "type": "number",
+                "description": "Numeric alert value (e.g., temperature).[file:1]",
+                "example": 37.2
+              }
+            }
+          },
+          "cicSiteId": {
+            "type": "integer",
+            "description": "Optional CIC site ID.[file:1]",
+            "example": 100001
+          },
+          "notifyRecipient": {
+            "type": "object",
+            "properties": {
+              "name": {"type": "string", "example": "John Doe"},
+              "phone": {"type": "string", "example": "98765432"}
+            },
+            "description": "Recipient details.[file:1]"
+          },
+          "imageUrl": {
+            "type": "string",
+            "format": "uri",
+            "description": "Alert image URL (with token).[file:1]",
+            "example": "https://example.com/image.jpeg?token=xxx"
+          },
+          "maskedImageUrl": {
+            "type": "string",
+            "format": "uri",
+            "description": "Privacy-masked image URL.[file:1]",
+            "example": "https://example.com/masked.jpeg?token=xxx"
+          },
+          "triggerPersonnel": {
+            "type": "object",
+            "properties": {
+              "id": {"type": "string", "example": "W1001"},
+              "name": {"type": "string", "example": "Jane Smith"}
+            },
+            "description": "Triggering person.[file:1]"
+          },
+          "alertDistance": {
+            "type": "object",
+            "properties": {
+              "value": {"type": "number", "example": 0.1},
+              "unit": {"type": "string", "example": "m"}
+            },
+            "description": "Proximity distance.[file:1]"
+          },
+          "thresholdMax": {"type": "number", "example": 100, "description": "Upper threshold.[file:1]"},
+          "thresholdMin": {"type": "number", "example": 20, "description": "Lower threshold.[file:1]"},
+          "workerId": {"type": "string", "example": "W1001"},
+          "bioStatus": {"type": "boolean", "example": true},
+          "sosFlag": {"type": "boolean", "example": false},
+          "confidenceScore": {"type": "number", "example": 85, "description": "AI confidence (0-100)."},
+          "emergencyContact": {"type": "string", "example": "Chan Tai Man 98765432"}
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "code": {"type": "integer", "example": 10002},
+          "msg": {"type": "string", "example": "missing parameters siteId"}
+        },
+        "description": "Standard error format (see section 2.12).[file:1]"
+      },
+      "SuccessResponse": {
+        "type": "object",
+        "properties": {
+          "code": {"type": "integer", "example": 10000},
+          "msg": {"type": "string", "example": "success"}
+        }
+      }
     }
-  ],
+  },
   "paths": {
     "/alerts": {
       "post": {
         "tags": ["Alert Management"],
-        "summary": "Alert-001 Add alert info by event trigger (CMP-hosted)",
-        "description": "Push alerts from 4S devices/software (batch array). Supports all categories[file:1].",
+        "summary": "Alert-001: Add alert (Push from vendor to CMP).[file:1]",
         "operationId": "addAlert",
         "security": [{"bearerAuth": []}],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/BaseAlert"
-                },
-                "minItems": 1,
-                "maxItems": 100
-              }
+              "schema": {"$ref": "#/components/schemas/AlertBase"}
             }
           }
         },
         "responses": {
           "200": {
-            "$ref": "#/components/responses/Success"
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/SuccessResponse"}
+              }
+            }
           },
-          "413": {
-            "$ref": "#/components/responses/PayloadTooLarge"
-          }
+          "400": {"description": "Bad Request", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/ErrorResponse"}}}},
+          "401": {"description": "Unauthorized"},
+          "429": {"description": "Rate Limited"}
         }
       },
       "patch": {
         "tags": ["Alert Management"],
-        "summary": "Alert-002 Update alert info by event trigger",
-        "description": "Update alert status/message (batch array)[file:1].",
+        "summary": "Alert-002: Update alert.[file:1]",
         "operationId": "updateAlert",
         "security": [{"bearerAuth": []}],
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
-              "schema": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/BaseAlert"
-                },
-                "minItems": 1,
-                "maxItems": 100
-              }
+              "schema": {"$ref": "#/components/schemas/AlertBase"}
             }
           }
         },
         "responses": {
           "200": {
-            "$ref": "#/components/responses/Success"
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/SuccessResponse"}
+              }
+            }
           }
         }
       },
       "get": {
         "tags": ["Alert Management"],
-        "summary": "Alert-004 Query alert info by event trigger (Vendor-hosted)",
-        "description": "Paginated alerts by category4S, site, time range. Sorted by pushAt DESC[file:1].",
+        "summary": "Alert-004: Query alerts (Pull).[file:1]",
+        "operationId": "queryAlerts",
+        "security": [{"bearerAuth": []}],
         "parameters": [
           {
             "name": "category4S",
             "in": "query",
             "required": true,
-            "schema": {
-              "type": "string",
-              "description": "See Appendix A Category 4S Type Code Table[file:1]"
-            }
+            "schema": {"type": "string"}
           },
           {
-            "$ref": "#/components/parameters/siteId"
-          },
-          {
-            "$ref": "#/components/parameters/supplierId"
-          },
-          {
-            "$ref": "#/components/parameters/deviceSn"
-          },
-          {
-            "$ref": "#/components/parameters/startTime"
-          },
-          {
-            "$ref": "#/components/parameters/endTime"
-          },
-          {
-            "$ref": "#/components/parameters/pageNum"
-          },
-          {
-            "$ref": "#/components/parameters/pageSize"
-          },
-          {
-            "name": "alertStatus",
+            "name": "siteId",
             "in": "query",
-            "schema": {
-              "type": "integer",
-              "enum": [0,1,2,3,4,5,6,7],
-              "description": "Filter by status[file:1]"
-            }
+            "required": true,
+            "schema": {"type": "string"}
+          },
+          {
+            "name": "supplierId",
+            "in": "query",
+            "required": true,
+            "schema": {"type": "string"}
+          },
+          {
+            "name": "startTime",
+            "in": "query",
+            "schema": {"type": "string", "format": "date-time"}
+          },
+          {
+            "name": "endTime",
+            "in": "query",
+            "schema": {"type": "string", "format": "date-time"}
+          },
+          {
+            "name": "pageNum",
+            "in": "query",
+            "schema": {"type": "integer", "default": 1}
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {"type": "integer", "default": 10}
           }
         ],
         "responses": {
@@ -129,7 +280,20 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AlertListResponse"
+                  "type": "object",
+                  "properties": {
+                    "code": {"type": "integer"},
+                    "msg": {"type": "string"},
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "list": {"type": "array", "items": {"$ref": "#/components/schemas/AlertBase"}},
+                        "totalCount": {"type": "integer"},
+                        "pageNum": {"type": "integer"},
+                        "pageSize": {"type": "integer"}
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -140,274 +304,24 @@
     "/alerts/media": {
       "post": {
         "tags": ["Alert Management"],
-        "summary": "Alert-003 Push alert media by event trigger",
-        "description": "Upload photos/videos/PDFs linked to alerts (batch)[file:1].",
+        "summary": "Alert-003: Push alert media.[file:1]",
         "operationId": "pushAlertMedia",
         "security": [{"bearerAuth": []}],
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/AlertMediaRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "$ref": "#/components/responses/Success"
-          }
-        }
-      }
-    },
-    "/alerts/status": {
-      "post": {
-        "tags": ["Alert Management"],
-        "summary": "Alert-005 CMP Push Alert Status to Solution Vendor (Optional)",
-        "description": "CMP notifies vendor of alert handling status[file:1].",
-        "operationId": "pushAlertStatus",
-        "security": [{"bearerAuth": []}],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AlertStatusRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "$ref": "#/components/responses/Success"
-          }
-        }
-      }
-    }
-  },
-  "components": {
-    "securitySchemes": {
-      "bearerAuth": {
-        "type": "http",
-        "scheme": "bearer",
-        "bearerFormat": "JWT",
-        "description": "OAuth2 Bearer token (TOKEN-001/002)[file:1]"
-      }
-    },
-    "schemas": {
-      "BaseAlert": {
-        "type": "object",
-        "required": ["category4S", "siteId", "supplierId", "deviceSn", "pushAt", "alertProperties"],
-        "properties": {
-          "category4S": {
-            "type": "string",
-            "description": "4S category code. See Appendix A[file:1]"
-          },
-          "siteId": {
-            "type": "string",
-            "example": "1693279120646",
-            "description": "Vendor-defined site key[file:1]"
-          },
-          "cicSiteId": {
-            "type": "integer",
-            "description": "CIC standard site ID (recommended)[file:1]"
-          },
-          "supplierId": {
-            "type": "string",
-            "example": "SUPPLIER-001"
-          },
-          "deviceSn": {
-            "type": "string",
-            "example": "DEVICE-001"
-          },
-          "pushAt": {
-            "type": "string",
-            "format": "date-time",
-            "example": "2025-01-06T14:40:16+08:00",
-            "description": "ISO 8601 timestamp (+08:00 HKT)[file:1]"
-          },
-          "alertProperties": {
-            "$ref": "#/components/schemas/AlertProperties"
-          },
-          "additionalProperties": {
-            "type": "object",
-            "$ref": "#/components/schemas/CategorySpecificProperties"
-          }
-        }
-      },
-      "AlertProperties": {
-        "type": "object",
-        "required": ["alertId", "alertType", "alertLevel", "alertStatus", "alertMessage", "alertTime", "alertNum"],
-        "properties": {
-          "alertId": {
-            "type": "string",
-            "example": "ALERT-001"
-          },
-          "alertType": {
-            "type": "string",
-            "description": "See Appendix H Alert Type Table[file:1]"
-          },
-          "alertLevel": {
-            "type": "integer",
-            "enum": [0,1,2],
-            "example": 2,
-            "description": "0=Notification, 1=Warning, 2=Critical[file:1]"
-          },
-          "alertStatus": {
-            "type": "integer",
-            "enum": [0,1,2,3,4,5,6,7],
-            "example": 0,
-            "description": "0=Unprocessed...7=Cancelled[file:1]"
-          },
-          "alertMessage": {
-            "type": "object",
-            "properties": {
-              "en-HK": {"type": "string"},
-              "zh-HK": {"type": "string"},
-              "zh-CN": {"type": "string"}
-            },
-            "additionalProperties": false,
-            "description": "BCP47 multilingual (2.3)[file:1]"
-          },
-          "alertTime": {
-            "type": "string",
-            "format": "date-time",
-            "example": "2025-01-06T14:40:16+08:00"
-          },
-          "alertNum": {
-            "type": "number",
-            "example": 85.5,
-            "description": "Severity metric/threshold value[file:1]"
-          }
-        }
-      },
-      "AlertMediaRequest": {
-        "type": "array",
-        "items": {
-          "type": "object",
-          "required": ["category4S", "siteId", "supplierId", "alertId", "pushAt"],
-          "properties": {
-            "category4S": {"type": "string"},
-            "siteId": {"type": "string"},
-            "supplierId": {"type": "string"},
-            "alertId": {"type": "string"},
-            "pushAt": {"type": "string", "format": "date-time"},
-            "videoUrl": {
-              "type": "string",
-              "format": "uri",
-              "description": "?token=xxx for access control (2.5)[file:1]"
-            },
-            "imageUrl": {"type": "string", "format": "uri"},
-            "pdfUrl": {"type": "string", "format": "uri"}
-          }
-        }
-      },
-      "AlertStatusRequest": {
-        "type": "array",
-        "items": {
-          "type": "object",
-          "required": ["alertId", "siteId", "newStatus"],
-          "properties": {
-            "alertId": {"type": "string"},
-            "siteId": {"type": "string"},
-            "newStatus": {
-              "type": "integer",
-              "enum": [1,2,3,4,5,6,7]
-            },
-            "handledBy": {"type": "string"},
-            "resolutionTime": {"type": "string", "format": "date-time"}
-          }
-        }
-      },
-      "AlertListResponse": {
-        "type": "object",
-        "properties": {
-          "code": {"type": "integer", "example": 10000},
-          "msg": {"type": "string", "example": "success"},
-          "data": {
-            "type": "object",
-            "properties": {
-              "list": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/BaseAlert"
+                "type": "object",
+                "properties": {
+                  "alertId": {"type": "string"},
+                  "videoUrl": {"type": "string", "format": "uri"}
                 }
-              },
-              "totalCount": {"type": "integer", "example": 110},
-              "pageNum": {"type": "integer", "example": 1},
-              "pageSize": {"type": "integer", "example": 10}
+              }
             }
           }
-        }
-      },
-      "CategorySpecificProperties": {
-        "type": "object",
-        "description": "Category-specific fields. See individual category schemas & Appendix E[file:1]",
-        "additionalProperties": true
-      }
-    },
-    "parameters": {
-      "siteId": {
-        "name": "siteId",
-        "in": "query",
-        "required": true,
-        "schema": {"type": "string"}
-      },
-      "supplierId": {
-        "name": "supplierId",
-        "in": "query",
-        "required": true,
-        "schema": {"type": "string"}
-      },
-      "deviceSn": {
-        "name": "deviceSn",
-        "in": "query",
-        "schema": {"type": "string"}
-      },
-      "startTime": {
-        "name": "startTime",
-        "in": "query",
-        "schema": {"type": "string", "format": "date-time"}
-      },
-      "endTime": {
-        "name": "endTime",
-        "in": "query",
-        "schema": {"type": "string", "format": "date-time"}
-      },
-      "pageNum": {
-        "name": "pageNum",
-        "in": "query",
-        "schema": {"type": "integer", "default": 1, "minimum": 1}
-      },
-      "pageSize": {
-        "name": "pageSize",
-        "in": "query",
-        "schema": {"type": "integer", "default": 10, "maximum": 200}
-      }
-    },
-    "responses": {
-      "Success": {
-        "description": "Success (code=10000)",
-        "content": {
-          "application/json": {
-            "schema": {
-              "$ref": "#/components/schemas/ApiResponse"
-            }
-          }
-        }
-      },
-      "PayloadTooLarge": {
-        "description": "Payload >10MB (2.8)[file:1]",
-        "content": {
-          "application/json": {
-            "schema": {
-              "$ref": "#/components/schemas/ApiResponse"
-            }
-          }
-        }
+        },
+        "responses": {"200": {"description": "Success"}}
       }
     }
   }
 }
-
